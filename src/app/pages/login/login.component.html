@@ -1,0 +1,46 @@
+<div class="login-wrap">
+  <div class="login-card">
+
+    <div class="login-logo">
+      <div class="logo-icon"><i class="ti ti-bolt"></i></div>
+      <span class="logo-text">HireFlow</span>
+    </div>
+
+    <h2 class="login-title">Sign in to your account</h2>
+    <p class="login-sub">AI-powered recruiting platform</p>
+
+    <div class="info-box" *ngIf="sessionExpired && !error">
+      <i class="ti ti-clock"></i> Your session expired. Please sign in again.
+    </div>
+
+    <div class="error-box" *ngIf="error">
+      <i class="ti ti-alert-circle"></i> {{ error }}
+    </div>
+
+    <form (ngSubmit)="submit()">
+      <div class="form-group" style="margin-bottom:12px">
+        <label>Email address</label>
+        <input type="email" [(ngModel)]="email" name="email"
+               placeholder="admin@hireflow.com" autocomplete="email">
+      </div>
+
+      <div class="form-group" style="margin-bottom:20px">
+        <label>Password</label>
+        <input type="password" [(ngModel)]="password" name="password"
+               placeholder="••••••••" autocomplete="current-password">
+      </div>
+
+      <button type="submit" class="btn btn-primary login-btn" [disabled]="loading || !email || !password">
+        <i class="ti ti-loader-2 spin" *ngIf="loading"></i>
+        <i class="ti ti-login" *ngIf="!loading"></i>
+        {{ loading ? 'Signing in...' : 'Sign in' }}
+      </button>
+    </form>
+
+    <div class="login-hint">
+      <i class="ti ti-info-circle"></i>
+      Default credentials: <strong>admin&#64;hireflow.ai</strong> / <strong>ChangeMe!2026</strong>
+    </div>
+
+  </div>
+</div>

@@ -1,0 +1,63 @@
+<!-- Login page — no sidebar -->
+<router-outlet *ngIf="!showShell"></router-outlet>
+
+<!-- App shell — sidebar + main -->
+<div class="app-shell" *ngIf="showShell">
+
+  <aside class="sidebar">
+    <div class="logo">
+      <div class="logo-icon"><i class="ti ti-bolt"></i></div>
+      <span class="logo-text">HireFlow</span>
+    </div>
+
+    <nav class="nav">
+      <div class="nav-section">Overview</div>
+      <a routerLink="/dashboard" routerLinkActive="active" class="nav-item">
+        <i class="ti ti-layout-dashboard"></i> Dashboard
+      </a>
+
+      <div class="nav-section">Recruiting</div>
+      <a routerLink="/jobs" routerLinkActive="active" class="nav-item">
+        <i class="ti ti-briefcase"></i> Jobs
+      </a>
+      <a routerLink="/candidates" routerLinkActive="active" class="nav-item">
+        <i class="ti ti-users"></i> Candidates
+      </a>
+      <a routerLink="/pipeline" routerLinkActive="active" class="nav-item">
+        <i class="ti ti-columns"></i> Pipeline
+      </a>
+      <a routerLink="/outreach" routerLinkActive="active" class="nav-item">
+        <i class="ti ti-mail"></i> Outreach
+      </a>
+
+      <div class="nav-section">Reports</div>
+      <a routerLink="/analytics" routerLinkActive="active" class="nav-item">
+        <i class="ti ti-chart-bar"></i> Analytics
+      </a>
+
+      <div class="nav-section">Settings</div>
+      <a routerLink="/users" routerLinkActive="active" class="nav-item">
+        <i class="ti ti-users-group"></i> Users
+      </a>
+      <a routerLink="/audit" routerLinkActive="active" class="nav-item">
+        <i class="ti ti-clipboard-list"></i> Audit Log
+      </a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="avatar">{{ authService.currentUserInitials }}</div>
+      <div class="user-info">
+        <div class="user-name">{{ authService.currentUserName }}</div>
+        <div class="user-role">{{ authService.currentUserRole }}</div>
+      </div>
+      <button class="logout-btn" (click)="logout()" title="Sign out">
+        <i class="ti ti-logout"></i>
+      </button>
+    </div>
+  </aside>
+
+  <main class="main-content">
+    <router-outlet></router-outlet>
+  </main>
+
+</div>

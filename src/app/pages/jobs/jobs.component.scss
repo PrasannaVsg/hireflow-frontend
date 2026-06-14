@@ -1,0 +1,465 @@
+// ── Page header ───────────────────────────────────────────────────────────
+.page-title-block {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.page-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
+  line-height: 1.2;
+}
+
+// Override global topbar breadcrumb to sit under title
+.topbar .breadcrumb {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+
+  .sep { font-size: 10px; }
+  .current { color: var(--text-secondary); font-weight: 400; }
+}
+
+// ── Stat row ──────────────────────────────────────────────────────────────
+.stat-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.stat-card {
+  background: var(--bg-primary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 14px 16px;
+
+  .stat-label {
+    font-size: 11px;
+    color: var(--text-secondary);
+    margin-bottom: 6px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  .stat-value {
+    font-size: 26px;
+    font-weight: 600;
+    color: var(--text-primary);
+    line-height: 1;
+  }
+}
+
+// ── Card header ───────────────────────────────────────────────────────────
+.jobs-header {
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+// ── Filter tabs ───────────────────────────────────────────────────────────
+.filter-tabs {
+  display: flex;
+  gap: 4px;
+}
+
+.filter-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 12px;
+  font-size: 12px;
+  font-weight: 500;
+  border-radius: 20px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+
+  &:hover {
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+  }
+
+  &.active {
+    background: var(--purple);
+    color: #fff;
+    border-color: var(--purple);
+
+    .tab-count {
+      background: rgba(255, 255, 255, 0.25);
+      color: #fff;
+    }
+  }
+
+  .tab-count {
+    font-size: 10px;
+    font-weight: 600;
+    background: var(--bg-secondary);
+    color: var(--text-tertiary);
+    border-radius: 10px;
+    padding: 1px 6px;
+    min-width: 18px;
+    text-align: center;
+  }
+}
+
+// ── Header right (search) ─────────────────────────────────────────────────
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.search-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+
+  .search-icon {
+    position: absolute;
+    left: 9px;
+    font-size: 13px;
+    color: var(--text-tertiary);
+    pointer-events: none;
+  }
+}
+
+.search-input {
+  font-size: 12px;
+  padding: 6px 10px 6px 30px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  width: 220px;
+
+  &::placeholder { color: var(--text-tertiary); }
+  &:focus { outline: none; border-color: var(--purple); background: var(--bg-primary); }
+}
+
+// ── Table overrides ───────────────────────────────────────────────────────
+.table-wrap {
+  overflow-x: auto;
+}
+
+.table-loading {
+  padding: 40px;
+  text-align: center;
+  font-size: 12px;
+  color: var(--text-tertiary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+table th {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+  background: var(--bg-secondary);
+}
+
+// ── Job title link ────────────────────────────────────────────────────────
+.job-title-link {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-primary);
+  text-decoration: none;
+
+  &:hover { color: var(--purple); text-decoration: underline; }
+}
+
+// ── Badge overrides for ON_HOLD & ARCHIVED ────────────────────────────────
+.badge {
+  &.on_hold  { background: var(--orange-light); color: #854F0B; }
+  &.archived { background: var(--bg-secondary); color: var(--text-tertiary); }
+}
+
+// ── Action buttons ────────────────────────────────────────────────────────
+.action-group {
+  display: flex;
+  gap: 5px;
+  flex-wrap: nowrap;
+}
+
+// Outlined action button
+.btn-outline {
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-primary);
+
+  &:hover { background: var(--bg-secondary); }
+}
+
+// Blue/purple filled button (Publish / Draft Outreach)
+.btn-blue {
+  background: var(--purple);
+  color: #fff;
+  border-color: var(--purple);
+
+  &:hover { background: #3C3489; border-color: #3C3489; }
+  &:disabled { opacity: 0.5; cursor: not-allowed; }
+}
+
+// Ghost button (Cancel / View)
+.btn-ghost {
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--text-secondary);
+
+  &:hover { background: var(--bg-secondary); color: var(--text-primary); }
+}
+
+// ── Modal ─────────────────────────────────────────────────────────────────
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  z-index: 200;
+}
+
+.modal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 201;
+  width: 600px;
+  max-width: calc(100vw - 32px);
+  max-height: calc(100vh - 48px);
+  background: var(--bg-primary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.18);
+  overflow: hidden;
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.modal-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.modal-close {
+  border: none;
+  background: transparent;
+  color: var(--text-tertiary);
+  padding: 4px;
+  border-radius: var(--radius-sm);
+
+  &:hover { background: var(--bg-secondary); color: var(--text-primary); }
+}
+
+.modal-body {
+  padding: 18px;
+  overflow-y: auto;
+  flex: 1;
+
+  .form-group {
+    margin-bottom: 14px;
+
+    label {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--text-secondary);
+      margin-bottom: 5px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+
+      .required { color: var(--red); }
+      .hint { font-weight: 400; text-transform: none; color: var(--text-tertiary); letter-spacing: 0; }
+    }
+
+    input, select, textarea {
+      width: 100%;
+      font-size: 12px;
+      padding: 8px 10px;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border);
+      background: var(--bg-secondary);
+      color: var(--text-primary);
+      font-family: inherit;
+      transition: border-color 0.15s;
+
+      &:focus { outline: none; border-color: var(--purple); background: var(--bg-primary); }
+      &::placeholder { color: var(--text-tertiary); }
+    }
+
+    textarea { resize: vertical; min-height: 140px; line-height: 1.5; }
+
+    select {
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239e9c97' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 10px center;
+      padding-right: 28px;
+    }
+  }
+
+  .form-row {
+    display: grid;
+    gap: 12px;
+    margin-bottom: 0;
+
+    &.cols-2 { grid-template-columns: 1fr 1fr; }
+  }
+}
+
+.modal-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 18px;
+  border-top: 1px solid var(--border);
+  flex-shrink: 0;
+  background: var(--bg-secondary);
+}
+
+.modal-footer-right {
+  display: flex;
+  gap: 8px;
+}
+
+.modal-section {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  color: var(--text-tertiary);
+  padding: 10px 0 8px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 14px;
+}
+
+.range-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.range-input {
+  flex: 1;
+  accent-color: var(--purple);
+  cursor: pointer;
+}
+
+// ── View Job Modal ─────────────────────────────────────────────────────────
+.view-modal { max-width: 620px; }
+
+.view-modal-body { padding: 20px 18px; }
+
+.view-meta-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
+.view-meta-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--text-secondary);
+  i { font-size: 12px; }
+}
+
+.view-section-label {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  color: var(--text-tertiary);
+  margin-bottom: 8px;
+}
+
+.view-description {
+  font-size: 13px;
+  color: var(--text-primary);
+  line-height: 1.6;
+  white-space: pre-wrap;
+  background: var(--bg-subtle, #f9f9f9);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 12px 14px;
+  max-height: 200px;
+  overflow-y: auto;
+  margin-bottom: 18px;
+}
+
+.view-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+
+.view-field-label {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  color: var(--text-tertiary);
+  margin-bottom: 3px;
+}
+
+.view-field-value {
+  font-size: 13px;
+  color: var(--text-primary);
+}
+
+.range-val {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--purple);
+  min-width: 28px;
+  text-align: right;
+}
+
+// ── Danger button ─────────────────────────────────────────────────────────
+.btn-danger {
+  background: var(--red);
+  color: #fff;
+  border: 1px solid var(--red);
+
+  &:hover    { background: #b91c1c; border-color: #b91c1c; }
+  &:disabled { opacity: 0.5; cursor: not-allowed; }
+}
+
+// ── Confirm modal ─────────────────────────────────────────────────────────
+.confirm-modal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 202;
+  width: 420px;
+  max-width: calc(100vw - 32px);
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+.spin { display: inline-block; animation: spin 1s linear infinite; }

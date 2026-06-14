@@ -1,0 +1,54 @@
+<div class="topbar">
+  <div class="breadcrumb"><span class="current">Pipeline</span></div>
+  <div style="display:flex;align-items:center;gap:10px">
+    <select [(ngModel)]="selectedJobId" (change)="onJobChange()" class="job-select">
+      <option *ngFor="let j of jobs" [value]="j.id">{{ j.title }}</option>
+    </select>
+    <span class="card-subtitle">{{ candidates.length }} candidates</span>
+  </div>
+</div>
+
+<div class="page-wrap">
+
+  <div class="pipeline-board">
+    <div class="pipeline-col" *ngFor="let stage of stages">
+
+      <div class="col-header" [class]="stageHeaderClass(stage)">
+        <span class="col-title">{{ stageLabel(stage) }}</span>
+        <span class="col-count">{{ candidatesForStage(stage).length }}</span>
+      </div>
+
+      <div
+        class="pipeline-card"
+        *ngFor="let c of candidatesForStage(stage)"
+        [class.hired-card]="stage === 'HIRED'"
+        [class.rejected-card]="stage === 'REJECTED'">
+        <div class="card-name">{{ c.fullName }}</div>
+        <div class="card-meta">{{ c.source | titlecase }}</div>
+        <div class="card-score" *ngIf="c.aiScore">
+          <i class="ti ti-bolt" style="font-size:10px"></i>
+          <span [class]="scoreClass(c.aiScore)">{{ c.aiScore }}</span>
+        </div>
+        <div class="card-actions">
+          <div class="move-dd">
+            <button class="btn btn-sm move-btn">Move <i class="ti ti-chevron-down" style="font-size:9px"></i></button>
+            <div class="move-menu">
+              <div class="move-opt" *ngFor="let s of stages" (click)="moveStage(c, s)" [class.current]="s === stage" [class.danger]="s === 'REJECTED'">
+                {{ stageLabel(s) }}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="empty-col" *ngIf="candidatesForStage(stage).length === 0">
+        <i class="ti ti-drag-drop" style="font-size:18px;color:var(--border)"></i>
+        <div style="font-size:10px;color:var(--text-tertiary);margin-top:4px">Empty</div>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+<div class="toast" *ngIf="toastMsg"><i class="ti ti-check" style="color:var(--text-success)"></i> {{ toastMsg }}</div>

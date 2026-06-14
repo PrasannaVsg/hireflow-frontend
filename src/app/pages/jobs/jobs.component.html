@@ -1,0 +1,379 @@
+<!-- ── Topbar ──────────────────────────────────────────────────────────── -->
+<div class="topbar">
+  <div class="page-title-block">
+    <h1 class="page-title">Job Requisitions</h1>
+    <div class="breadcrumb">
+      <span>HireFlow</span>
+      <i class="ti ti-chevron-right sep"></i>
+      <span class="current">Jobs</span>
+    </div>
+  </div>
+  <button class="btn btn-primary btn-sm" (click)="openModal()">
+    <i class="ti ti-plus"></i> New Requisition
+  </button>
+</div>
+
+<!-- ── Page body ──────────────────────────────────────────────────────── -->
+<div class="page-wrap">
+
+  <!-- Stat row -->
+  <div class="stat-row">
+    <div class="stat-card">
+      <div class="stat-label">Open Requisitions</div>
+      <div class="stat-value">{{ openCount }}</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Draft</div>
+      <div class="stat-value">{{ draftCount }}</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Closed</div>
+      <div class="stat-value">{{ closedCount }}</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Total Requisitions</div>
+      <div class="stat-value">{{ jobs.length }}</div>
+    </div>
+  </div>
+
+  <!-- Main card -->
+  <div class="card">
+
+    <!-- Card header: filter tabs + search -->
+    <div class="card-header jobs-header">
+      <div class="filter-tabs">
+        <button
+          *ngFor="let tab of tabs"
+          class="filter-tab"
+          [class.active]="activeTab === tab"
+          (click)="activeTab = tab">
+          {{ tab }}
+          <span class="tab-count">{{ tabCount(tab) }}</span>
+        </button>
+      </div>
+      <div class="header-right">
+        <div class="search-wrap">
+          <i class="ti ti-search search-icon"></i>
+          <input
+            type="text"
+            placeholder="Search by title or location…"
+            class="search-input"
+            [(ngModel)]="search">
+        </div>
+      </div>
+    </div>
+
+    <!-- Loading -->
+    <div *ngIf="loading" class="table-loading">
+      <i class="ti ti-loader spin"></i> Loading requisitions…
+    </div>
+
+    <!-- Table -->
+    <div *ngIf="!loading" class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>TITLE</th>
+            <th>STATUS</th>
+            <th>SENIORITY</th>
+            <th>LOCATION</th>
+            <th>CANDIDATES</th>
+            <th>CREATED BY</th>
+            <th>CREATED</th>
+            <th>ACTIONS</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let job of filteredJobs">
+
+            <!-- Title -->
+            <td>
+              <a [routerLink]="['/candidates', job.id]" class="job-title-link">{{ job.title }}</a>
+            </td>
+
+            <!-- Status badge -->
+            <td>
+              <span class="badge" [ngClass]="job.status | lowercase">
+                {{ job.status | titlecase }}
+              </span>
+            </td>
+
+            <!-- Seniority -->
+            <td class="text-secondary fs-12">{{ job.seniority | titlecase }}</td>
+
+            <!-- Location -->
+            <td class="text-secondary fs-12">{{ job.location || '—' }}</td>
+
+            <!-- Candidates -->
+            <td class="text-secondary fs-12">{{ candidateCount(job) }}</td>
+
+            <!-- Created By -->
+            <td class="text-secondary fs-12">{{ job.createdByName || '—' }}</td>
+
+            <!-- Created -->
+            <td class="text-tertiary fs-12">
+              <span *ngIf="createdAt(job)">{{ createdAt(job) | date:'MMM d, y' }}</span>
+              <span *ngIf="!createdAt(job)">—</span>
+            </td>
+
+            <!-- Actions -->
+            <td>
+              <div class="action-group">
+
+                <!-- View Details (all statuses) -->
+                <button class="btn btn-sm btn-ghost" (click)="viewJob(job)" title="View job details">
+                  <i class="ti ti-eye"></i> View
+                </button>
+
+                <!-- OPEN: View Candidates + Close -->
+                <ng-container *ngIf="job.status === 'OPEN'">
+                  <a [routerLink]="['/candidates', job.id]" class="btn btn-sm btn-outline">
+                    <i class="ti ti-users"></i> Candidates
+                  </a>
+                  <button class="btn btn-sm btn-danger" (click)="confirmClose(job)" title="Close job">
+                    <i class="ti ti-lock"></i> Close
+                  </button>
+                </ng-container>
+
+                <!-- DRAFT: Edit + Publish -->
+                <ng-container *ngIf="job.status === 'DRAFT'">
+                  <button class="btn btn-sm btn-outline" (click)="openEditModal(job)">
+                    <i class="ti ti-pencil"></i> Edit
+                  </button>
+                  <button class="btn btn-sm btn-blue" (click)="publish(job)">
+                    <i class="ti ti-bolt"></i> Publish
+                  </button>
+                </ng-container>
+
+                <!-- ON_HOLD: View Candidates -->
+                <ng-container *ngIf="job.status === 'ON_HOLD'">
+                  <a [routerLink]="['/candidates', job.id]" class="btn btn-sm btn-outline">
+                    <i class="ti ti-users"></i> Candidates
+                  </a>
+                </ng-container>
+
+                <!-- CLOSED / ARCHIVED: View Candidates -->
+                <ng-container *ngIf="job.status === 'CLOSED' || job.status === 'ARCHIVED'">
+                  <a [routerLink]="['/candidates', job.id]" class="btn btn-sm btn-outline">
+                    <i class="ti ti-users"></i> Candidates
+                  </a>
+                </ng-container>
+
+              </div>
+            </td>
+
+          </tr>
+
+          <!-- Empty state -->
+          <tr *ngIf="filteredJobs.length === 0">
+            <td colspan="8">
+              <div class="empty-state">
+                <i class="ti ti-briefcase" style="font-size:28px;color:var(--text-tertiary)"></i>
+                <p>No requisitions found</p>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+</div>
+
+<!-- ── View Job Modal ─────────────────────────────────────────────────── -->
+<div class="modal-backdrop" *ngIf="viewingJob" (click)="closeViewModal()"></div>
+<div class="modal view-modal" *ngIf="viewingJob" role="dialog">
+  <div class="modal-header">
+    <h2 class="modal-title"><i class="ti ti-briefcase" style="margin-right:6px"></i>{{ viewingJob.title }}</h2>
+    <button class="btn btn-icon modal-close" (click)="closeViewModal()"><i class="ti ti-x"></i></button>
+  </div>
+  <div class="modal-body view-modal-body">
+
+    <div class="view-meta-row">
+      <span class="badge" [ngClass]="viewingJob.status | lowercase">{{ viewingJob.status | titlecase }}</span>
+      <span class="view-meta-item" *ngIf="viewingJob.seniority"><i class="ti ti-chart-bar"></i> {{ viewingJob.seniority | titlecase }}</span>
+      <span class="view-meta-item" *ngIf="viewingJob.location"><i class="ti ti-map-pin"></i> {{ viewingJob.location }}</span>
+      <span class="view-meta-item" *ngIf="viewingJob.requiredSkills"><i class="ti ti-code"></i> {{ viewingJob.requiredSkills }}</span>
+    </div>
+
+    <div class="view-section-label">Job Description</div>
+    <div class="view-description">{{ viewingJob.description }}</div>
+
+    <div class="view-grid">
+      <div class="view-field">
+        <div class="view-field-label">Created By</div>
+        <div class="view-field-value">{{ viewingJob.createdByName || '—' }}</div>
+      </div>
+      <div class="view-field">
+        <div class="view-field-label">Created</div>
+        <div class="view-field-value">{{ createdAt(viewingJob) | date:'MMM d, y' }}</div>
+      </div>
+      <div class="view-field">
+        <div class="view-field-label">Candidates</div>
+        <div class="view-field-value">{{ candidateCount(viewingJob) }}</div>
+      </div>
+      <div class="view-field">
+        <div class="view-field-label">Auto Process</div>
+        <div class="view-field-value">{{ viewingJob.autoProcessEnabled ? 'Enabled' : 'Disabled' }}</div>
+      </div>
+      <div class="view-field">
+        <div class="view-field-label">Shortlist Size</div>
+        <div class="view-field-value">{{ viewingJob.autoShortlistSize ?? '—' }}</div>
+      </div>
+      <div class="view-field">
+        <div class="view-field-label">Score Threshold</div>
+        <div class="view-field-value">{{ viewingJob.autoScoreThreshold ?? '—' }}</div>
+      </div>
+      <div class="view-field">
+        <div class="view-field-label">Email Tone</div>
+        <div class="view-field-value">{{ (viewingJob.autoEmailTone | titlecase) || '—' }}</div>
+      </div>
+    </div>
+
+  </div>
+  <div class="modal-footer">
+    <button class="btn btn-ghost" (click)="closeViewModal()">Close</button>
+    <a [routerLink]="['/candidates', viewingJob.id]" class="btn btn-outline" (click)="closeViewModal()">
+      <i class="ti ti-users"></i> View Candidates
+    </a>
+  </div>
+</div>
+
+<!-- ── Close Job Confirm Dialog ───────────────────────────────────────── -->
+<div class="modal-backdrop" *ngIf="closeTarget" (click)="cancelClose()"></div>
+<div class="modal confirm-modal" *ngIf="closeTarget" role="dialog">
+  <div class="modal-header">
+    <h2 class="modal-title"><i class="ti ti-lock" style="color:var(--red);margin-right:6px"></i>Close Job</h2>
+    <button class="btn btn-icon modal-close" (click)="cancelClose()"><i class="ti ti-x"></i></button>
+  </div>
+  <div class="modal-body" style="padding:20px 18px">
+    <p style="font-size:13px;color:var(--text-primary);margin:0 0 6px">
+      Are you sure you want to close <strong>{{ closeTarget!.title }}</strong>?
+    </p>
+    <p style="font-size:12px;color:var(--text-tertiary);margin:0">
+      All candidates for this job will be archived. This cannot be undone.
+    </p>
+  </div>
+  <div class="modal-footer">
+    <button class="btn btn-ghost" (click)="cancelClose()" [disabled]="closing">Cancel</button>
+    <button class="btn btn-danger" (click)="doClose()" [disabled]="closing">
+      <i class="ti" [ngClass]="closing ? 'ti-loader-2 spin' : 'ti-lock'"></i>
+      {{ closing ? 'Closing…' : 'Close Job' }}
+    </button>
+  </div>
+</div>
+
+<!-- ── New Requisition Modal ──────────────────────────────────────────── -->
+<div class="modal-backdrop" *ngIf="showModal" (click)="closeModal()"></div>
+<div class="modal" *ngIf="showModal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+
+  <div class="modal-header">
+    <h2 id="modal-title" class="modal-title">{{ editingJob ? 'Edit Requisition' : 'New Requisition' }}</h2>
+    <button class="btn btn-icon modal-close" (click)="closeModal()">
+      <i class="ti ti-x"></i>
+    </button>
+  </div>
+
+  <div class="modal-body">
+
+    <div class="form-row cols-2">
+      <div class="form-group">
+        <label for="job-title">TITLE <span class="required">*</span></label>
+        <input id="job-title" type="text" placeholder="e.g. Senior Backend Engineer"
+               [(ngModel)]="form.title" maxlength="200">
+      </div>
+      <div class="form-group">
+        <label for="job-seniority">SENIORITY</label>
+        <select id="job-seniority" [(ngModel)]="form.seniority">
+          <option *ngFor="let s of seniorityOptions" [value]="s">{{ s | titlecase }}</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="form-row cols-2">
+      <div class="form-group">
+        <label for="job-location">LOCATION</label>
+        <input id="job-location" type="text" placeholder="e.g. Remote · US"
+               [(ngModel)]="form.location" maxlength="120">
+      </div>
+      <div class="form-group">
+        <label for="job-skills">REQUIRED SKILLS <span class="hint">(comma-separated)</span></label>
+        <input id="job-skills" type="text" placeholder="e.g. Java, Spring Boot, PostgreSQL"
+               [(ngModel)]="form.requiredSkills">
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label for="job-desc">JOB DESCRIPTION <span class="required">*</span></label>
+      <textarea id="job-desc" rows="5" placeholder="Paste or type the full job description…"
+                [(ngModel)]="form.description"></textarea>
+    </div>
+
+    <div class="modal-section">AI Ranking Settings</div>
+
+    <div class="form-row cols-2">
+      <div class="form-group">
+        <label>SHORTLIST SIZE <span class="hint">— top N candidates to rank</span></label>
+        <div class="range-row">
+          <input type="range" min="5" max="50" step="5" [(ngModel)]="form.shortlistSize" class="range-input">
+          <span class="range-val">{{ form.shortlistSize }}</span>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>SCORE THRESHOLD <span class="hint">— filter below this score</span></label>
+        <div class="range-row">
+          <input type="range" min="0" max="100" step="5" [(ngModel)]="form.scoreThreshold" class="range-input">
+          <span class="range-val">{{ form.scoreThreshold }}</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-row cols-2">
+      <div class="form-group">
+        <label>EMAIL TONE</label>
+        <select [(ngModel)]="form.emailTone">
+          <option *ngFor="let t of toneOptions" [value]="t">{{ t | titlecase }}</option>
+        </select>
+      </div>
+      <div class="form-group" style="display:flex;align-items:flex-end;padding-bottom:2px">
+        <div class="toggle-row" style="flex:1;padding:10px 12px" (click)="form.autoProcessEnabled = !form.autoProcessEnabled">
+          <div class="toggle-info">
+            <div class="toggle-title" style="font-size:12px">Auto batch process</div>
+            <div class="toggle-sub">Rank, filter &amp; draft outreach automatically</div>
+          </div>
+          <div class="toggle-switch" [class.on]="form.autoProcessEnabled"></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="modal-footer">
+    <button class="btn btn-ghost" (click)="closeModal()" [disabled]="saving">Cancel</button>
+    <div class="modal-footer-right">
+      <!-- Edit mode: single Save Changes button -->
+      <ng-container *ngIf="editingJob">
+        <button class="btn btn-blue" (click)="saveAsDraft()"
+                [disabled]="saving || !form.title.trim() || !form.description.trim()">
+          <i class="ti ti-device-floppy" *ngIf="!saving"></i>
+          <i class="ti ti-loader spin" *ngIf="saving"></i>
+          Save Changes
+        </button>
+      </ng-container>
+      <!-- New mode: Save as Draft + Publish -->
+      <ng-container *ngIf="!editingJob">
+        <button class="btn btn-outline" (click)="saveAsDraft()"
+                [disabled]="saving || !form.title.trim() || !form.description.trim()">
+          <i class="ti ti-device-floppy"></i> Save as Draft
+        </button>
+        <button class="btn btn-blue" (click)="publishNew()"
+                [disabled]="saving || !form.title.trim() || !form.description.trim()">
+          <i class="ti ti-bolt" *ngIf="!saving"></i>
+          <i class="ti ti-loader spin" *ngIf="saving"></i>
+          Publish Job
+        </button>
+      </ng-container>
+    </div>
+  </div>
+
+</div>

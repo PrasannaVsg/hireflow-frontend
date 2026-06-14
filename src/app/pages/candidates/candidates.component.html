@@ -1,0 +1,392 @@
+<!-- ── Topbar ──────────────────────────────────────────────────────────── -->
+<div class="topbar" (click)="closeDropdowns()">
+  <div class="page-title-block">
+    <h1 class="page-title">Candidates</h1>
+    <div class="breadcrumb">
+      <span>HireFlow</span>
+      <i class="ti ti-chevron-right sep"></i>
+      <span class="current">Candidates</span>
+    </div>
+  </div>
+  <div class="topbar-actions">
+    <button class="btn btn-outline btn-sm" (click)="openUploadModal()">
+      <i class="ti ti-upload"></i> Batch Upload
+    </button>
+    <button class="btn btn-primary btn-sm">
+      <i class="ti ti-plus"></i> Add Candidate
+    </button>
+  </div>
+</div>
+
+<!-- ── Page body ──────────────────────────────────────────────────────── -->
+<div class="page-wrap" (click)="closeDropdowns()">
+
+  <!-- Main card -->
+  <div class="card">
+
+    <!-- Card toolbar -->
+    <div class="card-toolbar">
+      <!-- Search -->
+      <div class="search-wrap">
+        <i class="ti ti-search search-icon"></i>
+        <input type="text" class="search-input" placeholder="Search candidates..."
+               [(ngModel)]="searchQuery">
+      </div>
+
+      <!-- Job filter -->
+      <div class="toolbar-right">
+        <label class="fs-11 text-muted">Job:</label>
+        <select class="period-select" [(ngModel)]="selectedJobId" (ngModelChange)="onJobChange()">
+          <option value="">All Jobs</option>
+          <option *ngFor="let j of activeJobs" [value]="j.id">{{ j.title }}</option>
+        </select>
+
+        <!-- Stage filter -->
+        <select class="period-select" [(ngModel)]="stageFilter">
+          <option value="">All stages</option>
+          <option *ngFor="let s of stages" [value]="s">{{ s | titlecase }}</option>
+        </select>
+
+
+        <span class="cand-count">{{ filteredCandidates.length }} candidate{{ filteredCandidates.length !== 1 ? 's' : '' }}</span>
+      </div>
+    </div>
+
+    <!-- Loading -->
+    <div *ngIf="loading" class="table-loading">
+      <i class="ti ti-loader-2 spin"></i> Loading candidates…
+    </div>
+
+    <!-- Table -->
+    <div *ngIf="!loading" class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th style="width:120px">NAME</th>
+            <th style="width:90px">JOB</th>
+            <th style="width:60px">STATUS</th>
+            <th style="width:90px">STAGE</th>
+            <th style="width:70px">AI SCORE</th>
+            <th style="width:80px">VOYAGE RANK</th>
+            <th style="width:80px">CLAUDE SCORE</th>
+            <th style="width:120px">SKILL BREAKDOWN</th>
+            <th style="width:110px">RATIONALE</th>
+            <th style="width:75px">ADDED</th>
+            <th style="width:145px">ACTIONS</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let c of filteredCandidates">
+
+            <!-- Name + email -->
+            <td>
+              <div class="cand-name">{{ c.fullName }}</div>
+              <div class="cand-email">{{ c.email }}</div>
+            </td>
+
+            <!-- Job -->
+            <td class="text-secondary fs-12">{{ c.jobTitle || jobTitle(c.jobId) }}</td>
+
+            <!-- Status -->
+            <td>
+              <span class="badge" [ngClass]="statusBadgeClass(c.status)">
+                {{ c.status || 'NEW' }}
+              </span>
+            </td>
+
+            <!-- Pipeline stage (dropdown) -->
+            <td>
+              <div class="stage-wrap" (click)="$event.stopPropagation()">
+                <button class="stage-btn" [ngClass]="stageBadgeClass(c.pipelineStage)"
+                        (click)="toggleDropdown(c.id, $event)">
+                  {{ c.pipelineStage }}
+                  <i class="ti ti-chevron-down" style="font-size:9px;margin-left:3px"></i>
+                </button>
+                <div class="stage-dropdown" *ngIf="openDropdownId === c.id">
+                  <button *ngFor="let s of stages" (click)="updateStage(c, s)"
+                          [class.active]="c.pipelineStage === s">
+                    {{ s | titlecase }}
+                  </button>
+                </div>
+              </div>
+            </td>
+
+            <!-- AI Score bar -->
+            <td>
+              <ng-container *ngIf="c.aiScore; else noScore">
+                <div class="score-cell">
+                  <div class="score-bar-track">
+                    <div class="score-bar-fill"
+                         [style.width.%]="c.aiScore"
+                         [style.background]="scoreBarColor(c.aiScore)"></div>
+                  </div>
+                  <span class="score-num" [style.color]="scoreBarColor(c.aiScore)">{{ c.aiScore }}</span>
+                </div>
+              </ng-container>
+              <ng-template #noScore>
+                <span class="text-tertiary fs-12">—</span>
+              </ng-template>
+            </td>
+
+            <!-- Voyage Rank -->
+            <td>
+              <ng-container *ngIf="rankingFor(c.id) as r; else noVoyage">
+                <div class="score-cell">
+                  <div class="score-bar-track">
+                    <div class="score-bar-fill"
+                         [style.width.%]="r.vectorSimilarity * 100"
+                         [style.background]="scoreBarColor(r.vectorSimilarity * 100)"></div>
+                  </div>
+                  <span class="score-num" [style.color]="scoreBarColor(r.vectorSimilarity * 100)">
+                    {{ (r.vectorSimilarity * 100) | number:'1.0-0' }}%
+                  </span>
+                </div>
+              </ng-container>
+              <ng-template #noVoyage><span class="text-tertiary fs-12">—</span></ng-template>
+            </td>
+
+            <!-- Claude Score -->
+            <td>
+              <ng-container *ngIf="rankingFor(c.id) as r; else noClaudeScore">
+                <ng-container *ngIf="r.claudeFailed === true || r.llmScore === null; else claudeOk">
+                  <span class="claude-failed" title="{{ r.claudeError }}">
+                    <i class="ti ti-alert-circle"></i> Failed
+                  </span>
+                </ng-container>
+                <ng-template #claudeOk>
+                  <div class="score-cell">
+                    <div class="score-bar-track">
+                      <div class="score-bar-fill"
+                           [style.width.%]="r.llmScore ?? 0"
+                           [style.background]="scoreBarColor(r.llmScore ?? undefined)"></div>
+                    </div>
+                    <span class="score-num" [style.color]="scoreBarColor(r.llmScore ?? undefined)">{{ r.llmScore }}</span>
+                  </div>
+                </ng-template>
+              </ng-container>
+              <ng-template #noClaudeScore><span class="text-tertiary fs-12">—</span></ng-template>
+            </td>
+
+            <!-- Skill Breakdown -->
+            <td>
+              <ng-container *ngIf="rankingFor(c.id) as r">
+                <ng-container *ngIf="parsedBreakdown(r) as bd">
+                  <div class="breakdown-cell">
+                    <span *ngFor="let sk of bd.matched" class="skill-tag matched" title="Matched">{{ sk }}</span>
+                    <span *ngFor="let sk of bd.missing" class="skill-tag missing" title="Missing">{{ sk }}</span>
+                    <span *ngFor="let sk of bd.transferable" class="skill-tag transferable" title="Transferable">{{ sk }}</span>
+                  </div>
+                </ng-container>
+              </ng-container>
+              <span *ngIf="!rankingFor(c.id)" class="text-tertiary fs-12">—</span>
+            </td>
+
+            <!-- Rationale -->
+            <td class="rationale-cell">
+              <span *ngIf="rankingFor(c.id)?.rationale; else noRationale"
+                    class="rationale-text" [title]="rankingFor(c.id)!.rationale">
+                {{ rankingFor(c.id)!.rationale }}
+              </span>
+              <ng-template #noRationale><span class="text-tertiary fs-12">—</span></ng-template>
+            </td>
+
+            <!-- Added date + by -->
+            <td class="text-tertiary fs-12">
+              <div>{{ c.createdAt ? (c.createdAt | date:'MMM dd, yyyy') : '—' }}</div>
+              <div *ngIf="c.createdByName" class="added-by">by {{ c.createdByName }}</div>
+            </td>
+
+            <!-- Actions -->
+            <td>
+              <div class="action-btns">
+                <button class="btn btn-sm" (click)="viewResume(c)" title="View resume">
+                  <i class="ti ti-file-text"></i> Resume
+                </button>
+                <button class="btn btn-sm btn-outline" (click)="draftEmailForCandidate(c)" title="Draft outreach email">
+                  <i class="ti ti-mail"></i> Email
+                </button>
+                <button *ngIf="!c.aiScore && (selectedJobId || c.jobId)" class="btn btn-sm btn-outline" (click)="runRanking(selectedJobId || c.jobId)">
+                  <i class="ti ti-star"></i> Rank
+                </button>
+                <button class="btn btn-sm btn-danger" (click)="confirmDelete(c)" title="Delete candidate">
+                  <i class="ti ti-trash"></i>
+                </button>
+              </div>
+            </td>
+          </tr>
+
+          <!-- Empty -->
+          <tr *ngIf="filteredCandidates.length === 0">
+            <td colspan="11">
+              <div class="empty-state">
+                <i class="ti ti-users" style="font-size:28px;color:var(--text-tertiary)"></i>
+                <p>No candidates found{{ searchQuery ? ' matching "' + searchQuery + '"' : '' }}</p>
+                <button class="btn btn-primary btn-sm" style="margin-top:10px" (click)="openUploadModal()">
+                  <i class="ti ti-upload"></i> Upload Resumes
+                </button>
+              </div>
+            </td>
+          </tr>
+
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+
+  <!-- AI Ranking progress -->
+  <div class="rank-banner" *ngIf="rankingState === 'running'">
+    <div>
+      <div class="banner-title"><i class="ti ti-sparkles"></i> Running AI ranking…</div>
+      <div class="banner-sub">{{ rankProgressText }}</div>
+    </div>
+    <div class="rank-progress-wrap">
+      <div class="rank-progress-bar" [style.width.%]="rankProgress"></div>
+    </div>
+    <span class="fs-12 text-muted">{{ rankProgress }}%</span>
+  </div>
+
+  <!-- AI Ranking failed -->
+  <div class="rank-banner rank-failed" *ngIf="rankingState === 'failed'">
+    <i class="ti ti-alert-triangle" style="font-size:20px;color:var(--red);flex-shrink:0"></i>
+    <div style="flex:1">
+      <div class="banner-title" style="color:var(--red)">Ranking failed</div>
+      <div class="banner-sub">{{ rankingError }}</div>
+    </div>
+    <button class="btn btn-sm btn-outline" (click)="runRanking()">
+      <i class="ti ti-refresh"></i> Retry
+    </button>
+    <button class="btn btn-icon btn-sm" (click)="rankingState = 'idle'" title="Dismiss">
+      <i class="ti ti-x"></i>
+    </button>
+  </div>
+
+</div>
+
+<!-- ── Batch Upload Modal ──────────────────────────────────────────────── -->
+<div class="modal-backdrop" *ngIf="showUploadModal" (click)="closeUploadModal()">
+  <div class="modal upload-modal" (click)="$event.stopPropagation()">
+
+    <div class="modal-header">
+      <h2 class="modal-title">Batch Resume Upload</h2>
+      <button class="btn btn-icon modal-close" (click)="closeUploadModal()">
+        <i class="ti ti-x"></i>
+      </button>
+    </div>
+
+    <div class="modal-body">
+
+      <!-- Drop zone -->
+      <label class="upload-zone" [class.drag-over]="isDragOver"
+             (dragover)="onDragOver($event)"
+             (dragleave)="onDragLeave()"
+             (drop)="onDrop($event)">
+        <input type="file" multiple accept=".pdf,.docx" (change)="onFileInput($event)" style="display:none">
+        <i class="ti ti-upload upload-icon"></i>
+        <div class="upload-title">Drop PDF / DOCX resumes here, or click to browse</div>
+        <div class="upload-sub">Up to 50 files · Async processing via ResumeUploadJob</div>
+      </label>
+
+      <!-- File list -->
+      <div class="file-list" *ngIf="uploadedFiles.length">
+        <div class="file-row" *ngFor="let f of uploadedFiles; let i = index">
+          <i class="ti ti-file-type-pdf" style="color:var(--red)" *ngIf="f.name.endsWith('.pdf')"></i>
+          <i class="ti ti-file-type-doc" style="color:var(--purple)" *ngIf="!f.name.endsWith('.pdf')"></i>
+          <div class="file-info">
+            <span class="file-name">{{ f.name }}</span>
+            <span class="file-size">{{ f.size }}</span>
+          </div>
+          <span *ngIf="f.status === 'queued'"    class="queued-badge"><i class="ti ti-clock"></i> Queued</span>
+          <span *ngIf="f.status === 'uploading'" class="embedding-badge"><i class="ti ti-loader-2 spin"></i> Uploading…</span>
+          <span *ngIf="f.status === 'done'"      class="done-badge"><i class="ti ti-check"></i> Done</span>
+          <span *ngIf="f.status === 'error'"     class="error-badge"><i class="ti ti-x"></i> Failed</span>
+          <button class="btn btn-icon btn-sm" *ngIf="f.status === 'queued'" (click)="removeFile(i)">
+            <i class="ti ti-x" style="font-size:11px"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Assign to job -->
+      <div class="form-group" style="margin-top:16px">
+        <label>ASSIGN TO JOB (OPTIONAL)</label>
+        <select [(ngModel)]="uploadJobId">
+          <option value="">— No job —</option>
+          <option *ngFor="let j of activeJobs" [value]="j.id">{{ j.title }}</option>
+        </select>
+      </div>
+
+      <!-- Source -->
+      <div class="form-group" style="margin-top:10px">
+        <label>SOURCE</label>
+        <select [(ngModel)]="uploadSource">
+          <option *ngFor="let s of sources" [value]="s">{{ s | titlecase }}</option>
+        </select>
+      </div>
+
+
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn btn-ghost" (click)="closeUploadModal()" [disabled]="uploading">Cancel</button>
+      <button class="btn btn-primary" (click)="startUpload()" [disabled]="uploading || !hasQueued">
+        <i class="ti" [ngClass]="uploading ? 'ti-loader-2 spin' : 'ti-upload'"></i>
+        {{ uploading ? 'Uploading…' : 'Upload & Process (' + queuedCount + ')' }}
+      </button>
+    </div>
+
+  </div>
+</div>
+
+<!-- ── Resume preview dialog ─────────────────────────────────────────── -->
+<div class="modal-backdrop" *ngIf="resumeDialog" (click)="closeResumeDialog()">
+  <div class="modal-box resume-modal" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <div class="modal-title"><i class="ti ti-file-text" style="margin-right:6px"></i>{{ resumeDialog.name }}</div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <a [href]="resumeDialog.url" target="_blank" class="btn btn-sm"><i class="ti ti-download"></i> Download</a>
+        <button class="btn btn-icon" (click)="closeResumeDialog()"><i class="ti ti-x"></i></button>
+      </div>
+    </div>
+    <div class="modal-body">
+      <iframe *ngIf="resumeDialog.isPdf" [src]="resumeDialog.safeUrl" class="resume-iframe"></iframe>
+      <div *ngIf="!resumeDialog.isPdf && resumeDialog.docxLoading" class="docx-placeholder">
+        <i class="ti ti-loader-2 spin" style="font-size:32px;color:var(--purple)"></i>
+        <p>Rendering document…</p>
+      </div>
+      <div *ngIf="!resumeDialog.isPdf && !resumeDialog.docxLoading && resumeDialog.docxHtml"
+           class="docx-content" [innerHTML]="resumeDialog.docxHtml"></div>
+      <div *ngIf="!resumeDialog.isPdf && !resumeDialog.docxLoading && !resumeDialog.docxHtml" class="docx-placeholder">
+        <i class="ti ti-file-type-doc" style="font-size:48px;color:var(--purple)"></i>
+        <p>Could not render document.</p>
+        <a [href]="resumeDialog.url" target="_blank" class="btn btn-primary"><i class="ti ti-download"></i> Download</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Delete Confirm Dialog ─────────────────────────────────────────── -->
+<div class="modal-backdrop" *ngIf="deleteTarget" (click)="cancelDelete()"></div>
+<div class="modal confirm-modal" *ngIf="deleteTarget" role="dialog">
+  <div class="modal-header">
+    <h2 class="modal-title"><i class="ti ti-trash" style="color:var(--red);margin-right:6px"></i>Delete Candidate</h2>
+    <button class="btn btn-icon modal-close" (click)="cancelDelete()"><i class="ti ti-x"></i></button>
+  </div>
+  <div class="modal-body" style="padding:20px 18px">
+    <p style="font-size:13px;color:var(--text-primary);margin:0 0 6px">
+      Are you sure you want to delete <strong>{{ deleteTarget!.fullName }}</strong>?
+    </p>
+    <p style="font-size:12px;color:var(--text-tertiary);margin:0">This action cannot be undone.</p>
+  </div>
+  <div class="modal-footer">
+    <button class="btn btn-ghost" (click)="cancelDelete()" [disabled]="deleting">Cancel</button>
+    <button class="btn btn-danger" (click)="doDelete()" [disabled]="deleting">
+      <i class="ti" [ngClass]="deleting ? 'ti-loader-2 spin' : 'ti-trash'"></i>
+      {{ deleting ? 'Deleting…' : 'Delete' }}
+    </button>
+  </div>
+</div>
+
+<!-- ── Toast ──────────────────────────────────────────────────────────── -->
+<div class="toast" *ngIf="toastMsg">
+  <i class="ti ti-check" style="color:var(--green)"></i> {{ toastMsg }}
+</div>

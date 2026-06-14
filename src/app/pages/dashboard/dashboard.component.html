@@ -1,0 +1,176 @@
+<div class="topbar">
+  <div class="page-title-block">
+    <h1 class="page-title">Dashboard</h1>
+    <div class="breadcrumb"><span class="current">Overview · Last 30 days</span></div>
+  </div>
+</div>
+
+<div class="page-wrap">
+
+  <div class="spinner-wrap" *ngIf="loading">
+    <i class="ti ti-loader-2 spin"></i>
+    <span>Loading…</span>
+  </div>
+
+  <ng-container *ngIf="!loading">
+
+    <!-- ── KPI row ──────────────────────────────────────────────────────── -->
+    <div class="kpi-row">
+
+      <div class="kpi-card">
+        <div class="kpi-icon purple"><i class="ti ti-briefcase"></i></div>
+        <div class="kpi-body">
+          <div class="kpi-value">{{ data?.openRequisitions ?? openJobs }}</div>
+          <div class="kpi-label">Open Jobs</div>
+        </div>
+        <a routerLink="/jobs" class="kpi-arrow"><i class="ti ti-arrow-right"></i></a>
+      </div>
+
+      <div class="kpi-card">
+        <div class="kpi-icon blue"><i class="ti ti-users"></i></div>
+        <div class="kpi-body">
+          <div class="kpi-value">{{ data?.activeCandidates ?? totalCandidates() }}</div>
+          <div class="kpi-label">Active Candidates</div>
+        </div>
+        <a routerLink="/candidates" class="kpi-arrow"><i class="ti ti-arrow-right"></i></a>
+      </div>
+
+      <div class="kpi-card">
+        <div class="kpi-icon green"><i class="ti ti-trophy"></i></div>
+        <div class="kpi-body">
+          <div class="kpi-value">{{ hiredCount() }}</div>
+          <div class="kpi-label">Hired This Period</div>
+        </div>
+      </div>
+
+      <div class="kpi-card">
+        <div class="kpi-icon orange"><i class="ti ti-mail"></i></div>
+        <div class="kpi-body">
+          <div class="kpi-value">{{ data?.outreachDrafted ?? '—' }}</div>
+          <div class="kpi-label">Outreach Drafted</div>
+        </div>
+        <a routerLink="/outreach" class="kpi-arrow"><i class="ti ti-arrow-right"></i></a>
+      </div>
+
+    </div>
+
+    <!-- ── Charts row ───────────────────────────────────────────────────── -->
+    <div class="charts-row">
+
+      <!-- Jobs by Status — donut chart -->
+      <div class="card chart-card">
+        <div class="card-hd">
+          <span class="card-title">Jobs by Status</span>
+          <span class="card-sub">{{ jobs.length }} total</span>
+        </div>
+        <div class="card-bd donut-layout">
+          <ng-container *ngIf="jobs.length; else noJobs">
+            <svg class="donut-svg" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="60" cy="60" r="48" fill="none" stroke="var(--border)" stroke-width="22"/>
+              <path *ngFor="let seg of donutSegments()"
+                    [attr.d]="seg.d"
+                    fill="none"
+                    [attr.stroke]="seg.color"
+                    stroke-width="22"
+                    stroke-linecap="butt"/>
+              <text x="60" y="56" text-anchor="middle" class="donut-center-num">{{ jobs.length }}</text>
+              <text x="60" y="70" text-anchor="middle" class="donut-center-lbl">Jobs</text>
+            </svg>
+            <div class="donut-legend">
+              <div class="legend-item" *ngFor="let s of jobStatusSlices()">
+                <span class="legend-dot" [style.background]="s.color"></span>
+                <span class="legend-label">{{ s.label }}</span>
+                <span class="legend-count" [style.color]="s.color">{{ s.count }}</span>
+                <span class="legend-pct">{{ s.pct }}%</span>
+              </div>
+            </div>
+          </ng-container>
+          <ng-template #noJobs>
+            <div class="chart-empty">No jobs yet. <a routerLink="/jobs">Create one →</a></div>
+          </ng-template>
+        </div>
+      </div>
+
+      <!-- Candidate Pipeline — horizontal bars -->
+      <div class="card chart-card">
+        <div class="card-hd">
+          <span class="card-title">Candidate Pipeline</span>
+          <span class="card-sub">{{ totalCandidates() }} total</span>
+        </div>
+        <div class="card-bd">
+          <ng-container *ngIf="totalCandidates() > 0; else noCandidates">
+            <div class="bar-row" *ngFor="let r of funnelRows()">
+              <div class="bar-label">{{ r.stage | titlecase }}</div>
+              <div class="bar-track">
+                <div class="bar-fill"
+                     [style.width.%]="r.pct"
+                     [style.background]="r.color"></div>
+              </div>
+              <div class="bar-count" [style.color]="r.color">{{ r.count }}</div>
+            </div>
+          </ng-container>
+          <ng-template #noCandidates>
+            <div class="chart-empty">No candidates yet. <a routerLink="/candidates">Upload resumes →</a></div>
+          </ng-template>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ── Bottom row ───────────────────────────────────────────────────── -->
+    <div class="charts-row">
+
+      <!-- Open Requisitions list -->
+      <div class="card chart-card">
+        <div class="card-hd">
+          <span class="card-title">Open Requisitions</span>
+          <a routerLink="/jobs" class="card-link">View all →</a>
+        </div>
+        <div class="card-bd no-pad">
+          <ng-container *ngIf="topJobs.length; else noOpen">
+            <a class="req-row" *ngFor="let j of topJobs" [routerLink]="['/candidates']"
+               [queryParams]="{jobId: j.id}">
+              <div class="req-dot" style="background:#4ab34a"></div>
+              <div class="req-info">
+                <div class="req-title">{{ j.title }}</div>
+                <div class="req-meta">{{ j.seniority | titlecase }} · {{ j.location || 'Remote' }}</div>
+              </div>
+              <i class="ti ti-chevron-right req-arrow"></i>
+            </a>
+          </ng-container>
+          <ng-template #noOpen>
+            <div class="chart-empty">No open jobs. <a routerLink="/jobs">Create a requisition →</a></div>
+          </ng-template>
+        </div>
+      </div>
+
+      <!-- Recent Activity -->
+      <div class="card chart-card">
+        <div class="card-hd">
+          <span class="card-title">Recent Activity</span>
+        </div>
+        <div class="card-bd no-pad">
+          <ng-container *ngIf="data?.recentActivity?.length; else noActivity">
+            <div class="act-row" *ngFor="let a of data!.recentActivity">
+              <div class="act-icon" [class.success]="a.success" [class.failed]="!a.success">
+                <i class="ti" [ngClass]="activityIcon(a.operation)"></i>
+              </div>
+              <div class="act-body">
+                <div class="act-label">{{ activityLabel(a) }}</div>
+                <div class="act-time">{{ relativeTime(a.createdAt) }}</div>
+              </div>
+              <span class="act-badge" [class.ok]="a.success" [class.fail]="!a.success">
+                {{ a.success ? 'OK' : 'FAIL' }}
+              </span>
+            </div>
+          </ng-container>
+          <ng-template #noActivity>
+            <div class="chart-empty">No recent activity</div>
+          </ng-template>
+        </div>
+      </div>
+
+    </div>
+
+  </ng-container>
+</div>

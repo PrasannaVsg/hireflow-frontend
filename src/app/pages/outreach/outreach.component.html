@@ -1,0 +1,70 @@
+<div class="topbar">
+  <div class="breadcrumb"><span class="current">Outreach</span></div>
+</div>
+
+<div class="page-wrap">
+
+  <div class="metrics-row cols-3" style="max-width:480px">
+    <div class="metric-box"><div class="label">Total drafted</div><div class="value">{{ emails.length }}</div></div>
+    <div class="metric-box"><div class="label">Pending approval</div><div class="value">{{ draftCount }}</div></div>
+    <div class="metric-box"><div class="label">Sent</div><div class="value">{{ sentCount }}</div></div>
+  </div>
+
+  <div class="email-list">
+
+    <div class="email-card" *ngFor="let e of emails"
+         [class.sent]="e.status === 'SENT'"
+         [class.rejected]="e.status === 'REJECTED'"
+         [class.approved]="e.status === 'APPROVED'">
+      <div class="email-card-header">
+        <div class="header-left">
+          <div class="candidate-name">{{ displayName(e) }}</div>
+          <div class="email-meta">
+            <ng-container *ngIf="e.candidateEmail">{{ e.candidateEmail }} · </ng-container>
+            <ng-container *ngIf="e.sentAt">{{ relativeTime(e.sentAt) }}</ng-container>
+          </div>
+        </div>
+        <span class="badge"
+              [class.pending]="e.status === 'DRAFT'"
+              [class.sent]="e.status === 'SENT' || e.status === 'APPROVED'"
+              [class.rejected]="e.status === 'REJECTED'">
+          {{ e.status | titlecase }}
+        </span>
+      </div>
+
+      <div class="email-subject">
+        <i class="ti ti-mail" style="font-size:11px"></i> {{ e.subject }}
+      </div>
+
+      <div class="email-body">{{ e.body }}</div>
+
+      <div class="email-footer">
+        <span class="tone-chip"><i class="ti ti-adjust"></i> claude-sonnet-4-6</span>
+        <div class="email-actions" *ngIf="e.status === 'DRAFT'">
+          <button class="btn btn-success btn-sm" (click)="approve(e)">
+            <i class="ti ti-send"></i> Approve &amp; Send
+          </button>
+          <button class="btn btn-sm btn-danger" (click)="reject(e)"><i class="ti ti-x"></i> Reject</button>
+        </div>
+        <div class="sent-label" *ngIf="e.status === 'SENT'">
+          <i class="ti ti-check"></i> Sent
+        </div>
+        <div class="sent-label" *ngIf="e.status === 'APPROVED'">
+          <i class="ti ti-check"></i> Approved
+        </div>
+      </div>
+    </div>
+
+    <div class="empty-state" *ngIf="emails.length === 0 && !loading">
+      <i class="ti ti-mail" style="font-size:28px;color:var(--border);display:block;margin-bottom:8px"></i>
+      <div class="fw-500">Outreach drafts appear here after you draft them from the Candidates page.</div>
+      <div class="text-muted fs-11" style="margin-top:8px">
+        <a routerLink="/candidates" style="color:var(--accent)">Go to Candidates</a> to run AI ranking and draft personalised outreach emails.
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+<div class="toast" *ngIf="toastMsg"><i class="ti ti-check" style="color:var(--text-success)"></i> {{ toastMsg }}</div>

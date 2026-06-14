@@ -1,0 +1,592 @@
+// ── Topbar ────────────────────────────────────────────────────────────────
+.topbar-actions { display: flex; gap: 8px; align-items: center; }
+
+.period-select {
+  appearance: none;
+  -webkit-appearance: none;
+  background: var(--bg-secondary) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%238B949E' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E") no-repeat right 8px center;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  font-size: 12px;
+  font-family: inherit;
+  padding: 5px 28px 5px 10px;
+  cursor: pointer;
+  transition: border-color 0.15s;
+  outline: none;
+
+  &:hover  { border-color: var(--purple); }
+  &:focus  { border-color: var(--purple); }
+
+  option {
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+  }
+}
+
+// ── Card toolbar ──────────────────────────────────────────────────────────
+.card-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+  flex-wrap: wrap;
+}
+
+.search-wrap {
+  position: relative;
+  flex: 1;
+  min-width: 200px;
+  max-width: 320px;
+
+  .search-icon {
+    position: absolute;
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-tertiary);
+    font-size: 14px;
+  }
+}
+
+.search-input {
+  width: 100%;
+  padding: 7px 10px 7px 30px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  font-size: 12px;
+
+  &::placeholder { color: var(--text-tertiary); }
+  &:focus { outline: none; border-color: var(--purple); }
+}
+
+.toolbar-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+  flex-wrap: wrap;
+}
+
+.cand-count {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  white-space: nowrap;
+  padding: 4px 8px;
+  background: var(--bg-secondary);
+  border-radius: var(--radius-md);
+}
+
+// ── Table ─────────────────────────────────────────────────────────────────
+.table-wrap {
+  width: 100%;
+  overflow-x: auto;
+
+  &::-webkit-scrollbar { height: 4px; }
+  &::-webkit-scrollbar-track { background: var(--bg-secondary); }
+  &::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+}
+
+table {
+  width: max-content;
+  min-width: 100%;
+  border-collapse: collapse;
+
+  thead tr { border-bottom: 1px solid var(--border); }
+
+  th {
+    padding: 8px 10px;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    color: var(--text-tertiary);
+    text-align: left;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  tbody tr {
+    border-bottom: 1px solid var(--border-light);
+    transition: background 0.1s;
+    &:last-child { border-bottom: none; }
+    &:hover { background: var(--bg-secondary); }
+  }
+
+  td {
+    padding: 9px 10px;
+    vertical-align: middle;
+    font-size: 12px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+.table-loading {
+  padding: 40px;
+  text-align: center;
+  font-size: 13px;
+  color: var(--text-tertiary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+// ── Candidate name cell ────────────────────────────────────────────────────
+.cand-name  { font-size: 13px; font-weight: 500; color: var(--text-primary); }
+.cand-email { font-size: 11px; color: var(--text-tertiary); margin-top: 1px; }
+.added-by   { font-size: 10px; color: var(--text-tertiary); margin-top: 2px; }
+
+// ── Status badges ─────────────────────────────────────────────────────────
+.badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+
+  &.status-active   { background: rgba(74,179,74,0.15); color: #4ab34a; }
+  &.status-parsed   { background: rgba(56,140,220,0.15); color: #388cdc; }
+  &.status-new      { background: rgba(140,140,160,0.15); color: var(--text-secondary); }
+  &.status-rejected { background: rgba(220,60,60,0.15); color: var(--red); }
+  &.status-hired    { background: rgba(83,74,183,0.15); color: var(--purple); }
+}
+
+// ── Stage button & dropdown ───────────────────────────────────────────────
+.stage-wrap { position: relative; display: inline-block; }
+
+.stage-btn {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  border: none;
+  white-space: nowrap;
+
+  &.stage-sourced    { background: rgba(140,140,160,0.15); color: var(--text-secondary); }
+  &.stage-screening  { background: rgba(186,117,23,0.2);  color: #d4972a; }
+  &.stage-interview  { background: rgba(83,74,183,0.2);   color: var(--purple); }
+  &.stage-offer      { background: rgba(56,140,220,0.2);  color: #388cdc; }
+  &.stage-hired      { background: rgba(74,179,74,0.2);   color: #4ab34a; }
+  &.stage-rejected   { background: rgba(220,60,60,0.2);   color: var(--red); }
+}
+
+.stage-dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+  z-index: 200;
+  min-width: 130px;
+  overflow: hidden;
+
+  button {
+    display: block;
+    width: 100%;
+    text-align: left;
+    padding: 8px 12px;
+    font-size: 12px;
+    color: var(--text-secondary);
+    background: none;
+    border: none;
+    cursor: pointer;
+
+    &:hover  { background: var(--bg-secondary); color: var(--text-primary); }
+    &.active { color: var(--purple); font-weight: 500; }
+  }
+}
+
+// ── Claude failed indicator ───────────────────────────────────────────────
+.claude-failed {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  color: var(--red, #e53e3e);
+  font-weight: 500;
+  cursor: help;
+
+  i { font-size: 13px; }
+}
+
+// ── AI Score bar ──────────────────────────────────────────────────────────
+.score-cell {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 120px;
+}
+
+.score-bar-track {
+  flex: 1;
+  height: 6px;
+  background: var(--bg-secondary);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.score-bar-fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.3s;
+}
+
+.score-num {
+  font-size: 12px;
+  font-weight: 600;
+  min-width: 24px;
+  text-align: right;
+}
+
+// ── Action buttons ────────────────────────────────────────────────────────
+.action-btns {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  flex-wrap: nowrap;
+}
+
+// ── Rank banner ───────────────────────────────────────────────────────────
+.rank-banner {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: var(--bg-card);
+  border: 1px solid var(--purple);
+  border-radius: var(--radius-lg);
+  padding: 14px 18px;
+  margin-top: 16px;
+
+  .banner-title { font-size: 13px; font-weight: 500; color: var(--purple); }
+  .banner-sub   { font-size: 11px; color: var(--text-tertiary); margin-top: 2px; }
+}
+
+.rank-progress-wrap {
+  flex: 1;
+  height: 6px;
+  background: var(--bg-secondary);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.rank-progress-bar {
+  height: 100%;
+  background: var(--purple);
+  border-radius: 3px;
+  transition: width 0.4s;
+}
+
+.rank-failed {
+  border-color: var(--red);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+// ── Upload modal ──────────────────────────────────────────────────────────
+.modal-backdrop {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.55);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 500;
+}
+
+.modal {
+  background: #ffffff;
+  color: #1a1a2e;
+  border: 1px solid #e2e8f0;
+  border-radius: var(--radius-lg);
+  box-shadow: 0 12px 48px rgba(0,0,0,0.18);
+  width: 520px;
+  max-width: 95vw;
+  display: flex;
+  flex-direction: column;
+}
+
+.upload-modal .modal-body { padding: 20px 20px 0; }
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+
+  .modal-title { font-size: 14px; font-weight: 600; }
+}
+
+.modal-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 16px 20px;
+  border-top: 1px solid var(--border);
+  margin-top: 16px;
+}
+
+// ── Upload zone ────────────────────────────────────────────────────────────
+.upload-zone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border: 2px dashed var(--border);
+  border-radius: var(--radius-lg);
+  padding: 28px 20px;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+
+  &:hover, &.drag-over {
+    border-color: var(--purple);
+    background: rgba(83,74,183,0.04);
+  }
+
+  .upload-icon  { font-size: 28px; color: var(--text-tertiary); margin-bottom: 10px; }
+  .upload-title { font-size: 13px; font-weight: 500; margin-bottom: 4px; }
+  .upload-sub   { font-size: 11px; color: var(--text-tertiary); }
+}
+
+// ── File list ─────────────────────────────────────────────────────────────
+.file-list {
+  margin-top: 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.file-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border-light);
+  font-size: 12px;
+
+  &:last-child { border-bottom: none; }
+}
+
+.file-info {
+  flex: 1;
+  min-width: 0;
+
+  .file-name { display: block; font-size: 12px; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .file-size { font-size: 10px; color: var(--text-tertiary); }
+}
+
+.queued-badge    { font-size: 11px; color: var(--text-tertiary); display: flex; align-items: center; gap: 3px; white-space: nowrap; }
+.embedding-badge { font-size: 11px; color: var(--orange);        display: flex; align-items: center; gap: 3px; white-space: nowrap; }
+.done-badge      { font-size: 11px; color: var(--green);         display: flex; align-items: center; gap: 3px; white-space: nowrap; }
+.error-badge     { font-size: 11px; color: var(--red);           display: flex; align-items: center; gap: 3px; white-space: nowrap; }
+
+.upload-info-text {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  margin-top: 14px;
+  line-height: 1.6;
+
+  code {
+    background: var(--bg-secondary);
+    padding: 1px 5px;
+    border-radius: 3px;
+    font-size: 10px;
+    color: var(--purple);
+  }
+}
+
+// ── Form groups in modal ──────────────────────────────────────────────────
+.form-group {
+  label {
+    display: block;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    color: var(--text-tertiary);
+    margin-bottom: 5px;
+  }
+
+  select, input {
+    width: 100%;
+    padding: 8px 10px;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    color: var(--text-primary);
+    font-size: 12px;
+
+    &:focus { outline: none; border-color: var(--purple); }
+  }
+}
+
+// ── Resume modal ──────────────────────────────────────────────────────────
+.modal-box {
+  background: var(--bg-card);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 8px 40px rgba(0,0,0,0.3);
+  width: 860px;
+  max-width: 95vw;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.resume-modal .modal-body {
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.resume-iframe {
+  width: 100%;
+  flex: 1;
+  border: none;
+  min-height: 70vh;
+}
+
+.docx-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding: 60px 24px;
+  color: var(--text-secondary);
+  font-size: 13px;
+}
+
+.docx-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 32px 48px;
+  font-size: 13px;
+  line-height: 1.7;
+  color: #111;
+  background: #fff;
+  min-height: 70vh;
+
+  h1, h2, h3, h4 { font-weight: 600; margin: 16px 0 6px; }
+  h1 { font-size: 20px; }
+  h2 { font-size: 16px; }
+  h3 { font-size: 14px; }
+  p  { margin: 0 0 8px; }
+  ul, ol { padding-left: 20px; margin-bottom: 8px; }
+  li { margin-bottom: 3px; }
+  table { width: 100%; border-collapse: collapse; margin-bottom: 12px; }
+  td, th { padding: 6px 8px; border: 1px solid #ddd; font-size: 12px; }
+}
+
+// ── Empty state ───────────────────────────────────────────────────────────
+.empty-state {
+  text-align: center;
+  padding: 48px 24px;
+  color: var(--text-tertiary);
+  font-size: 13px;
+  p { margin-top: 10px; }
+}
+
+// ── Toast ─────────────────────────────────────────────────────────────────
+.toast {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 10px 18px;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+  z-index: 9999;
+  white-space: nowrap;
+}
+
+// ── Date filter inputs ────────────────────────────────────────────────────
+.date-input {
+  width: 130px;
+  padding: 5px 8px;
+  font-size: 11px;
+  color: var(--text-primary);
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  &:focus { outline: none; border-color: var(--purple); }
+}
+
+// ── Skill breakdown cell ──────────────────────────────────────────────────
+.breakdown-cell {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px;
+  max-width: 200px;
+}
+
+.skill-tag {
+  display: inline-block;
+  padding: 1px 6px;
+  border-radius: 10px;
+  font-size: 10px;
+  font-weight: 500;
+  white-space: nowrap;
+
+  &.matched     { background: rgba(74,179,74,0.15);  color: #3a9a3a; }
+  &.missing     { background: rgba(220,60,60,0.15);  color: var(--red); }
+  &.transferable{ background: rgba(56,140,220,0.15); color: #388cdc; }
+}
+
+// ── Rationale cell ────────────────────────────────────────────────────────
+.rationale-cell { max-width: 220px; }
+
+.rationale-text {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  font-size: 11px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  cursor: help;
+}
+
+// ── Danger button ─────────────────────────────────────────────────────────
+.btn-danger {
+  background: var(--red);
+  color: #fff;
+  border: 1px solid var(--red);
+
+  &:hover    { background: #b91c1c; border-color: #b91c1c; }
+  &:disabled { opacity: 0.5; cursor: not-allowed; }
+}
+
+// ── Confirm modal ─────────────────────────────────────────────────────────
+.confirm-modal {
+  width: 400px;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 501;
+}
+
+// ── Animations ────────────────────────────────────────────────────────────
+@keyframes spin { to { transform: rotate(360deg); } }
+.spin { display: inline-block; animation: spin 1s linear infinite; }

@@ -1,0 +1,56 @@
+.hint { color: var(--text-tertiary); font-weight: 400; }
+.hint-text { font-size: 10px; color: var(--text-tertiary); margin-top: 4px; }
+
+.range-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 6px;
+}
+
+.range-input {
+  flex: 1;
+  accent-color: var(--purple);
+  cursor: pointer;
+}
+
+.range-val {
+  font-size: 14px;
+  font-weight: 500;
+  width: 30px;
+  text-align: right;
+}
+
+.auto-config {
+  background: var(--bg-secondary);
+  border-radius: var(--radius-md);
+  padding: 12px 14px;
+  margin-top: 10px;
+  margin-bottom: 4px;
+
+  .auto-info {
+    font-size: 11px;
+    color: var(--text-secondary);
+    margin-bottom: 10px;
+    display: flex;
+    align-items: flex-start;
+    gap: 6px;
+  }
+
+  .auto-steps { display: flex; flex-direction: column; gap: 7px; }
+
+  .auto-step {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+
+    i { color: var(--text-success); font-size: 13px; }
+  }
+}
+
+.form-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}

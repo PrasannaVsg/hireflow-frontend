@@ -1,0 +1,200 @@
+<div class="topbar">
+  <div class="breadcrumb">
+    <span class="current">User Management</span>
+  </div>
+  <div style="display:flex;gap:8px">
+    <button class="btn btn-outline btn-sm" (click)="openChangePassword()">
+      <i class="ti ti-lock"></i> Change My Password
+    </button>
+    <button class="btn btn-primary" (click)="openForm()">
+      <i class="ti ti-user-plus"></i> Add user
+    </button>
+  </div>
+</div>
+
+<div class="page-wrap">
+
+  <!-- Create user form -->
+  <div class="form-card" *ngIf="showForm">
+    <div class="form-card-header">
+      <span class="fw-500"><i class="ti ti-user-plus" style="color:var(--purple)"></i> New user</span>
+      <button class="icon-btn" (click)="cancelForm()"><i class="ti ti-x"></i></button>
+    </div>
+
+    <div class="form-card-body">
+      <div class="info-row">
+        <i class="ti ti-info-circle" style="color:var(--purple)"></i>
+        <span>A default password <strong>{{ DEFAULT_PASSWORD }}</strong> will be set. The user must change it on first login.</span>
+      </div>
+
+      <div class="error-box" *ngIf="formError">
+        <i class="ti ti-alert-circle"></i> {{ formError }}
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Full name</label>
+          <input type="text" [(ngModel)]="form.fullName" placeholder="e.g. Priya Sharma">
+        </div>
+        <div class="form-group">
+          <label>Email address</label>
+          <input type="email" [(ngModel)]="form.email" placeholder="priya@company.com">
+        </div>
+      </div>
+
+      <div class="form-group" style="max-width:200px">
+        <label>Role</label>
+        <select [(ngModel)]="form.role">
+          <option *ngFor="let r of roles" [value]="r">{{ roleLabel(r) }}</option>
+        </select>
+      </div>
+
+      <div class="role-descriptions">
+        <div class="role-desc-item"><strong>Super Admin</strong> — full access including user management</div>
+        <div class="role-desc-item"><strong>Admin</strong> — manage jobs, candidates, outreach</div>
+        <div class="role-desc-item"><strong>Recruiter</strong> — upload resumes, run ranking, manage pipeline</div>
+        <div class="role-desc-item"><strong>Viewer</strong> — read-only access</div>
+      </div>
+    </div>
+
+    <div class="form-card-footer">
+      <button class="btn" (click)="cancelForm()">Cancel</button>
+      <button class="btn btn-primary" (click)="createUser()" [disabled]="saving || !form.email || !form.fullName">
+        <i class="ti ti-loader-2 spin" *ngIf="saving"></i>
+        <i class="ti ti-user-plus" *ngIf="!saving"></i>
+        {{ saving ? 'Creating...' : 'Create user' }}
+      </button>
+    </div>
+  </div>
+
+  <!-- Users table -->
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title">Team members</span>
+      <span class="card-subtitle">{{ users.length }} user{{ users.length !== 1 ? 's' : '' }}</span>
+    </div>
+
+    <div class="loading-row" *ngIf="loading">
+      <i class="ti ti-loader-2 spin"></i> Loading users...
+    </div>
+
+    <table *ngIf="!loading">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Email</th>
+          <th>Role</th>
+          <th>Status</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let u of users">
+          <td>
+            <div class="user-cell">
+              <div class="user-avatar">{{ u.fullName.charAt(0) }}</div>
+              <span class="fw-500">{{ u.fullName }}</span>
+            </div>
+          </td>
+          <td><span class="fs-11 text-muted">{{ u.email }}</span></td>
+          <td><span class="role-badge" [class]="roleBadgeClass(u.role)">{{ roleLabel(u.role) }}</span></td>
+          <td>
+            <span class="status-dot active" *ngIf="u.enabled"><i class="ti ti-circle-filled"></i> Active</span>
+            <span class="status-dot disabled" *ngIf="!u.enabled"><i class="ti ti-circle"></i> Disabled</span>
+          </td>
+          <td>
+            <div class="action-group">
+              <ng-container *ngIf="u.enabled">
+                <button class="btn btn-sm btn-outline" (click)="openResetPassword(u)" title="Reset password">
+                  <i class="ti ti-key"></i> Reset Pwd
+                </button>
+                <button class="btn btn-sm btn-danger" (click)="disableUser(u)">
+                  <i class="ti ti-ban"></i> Disable
+                </button>
+              </ng-container>
+              <ng-container *ngIf="!u.enabled">
+                <button class="btn btn-sm btn-outline" (click)="openResetPassword(u)" title="Reset password">
+                  <i class="ti ti-key"></i> Reset Pwd
+                </button>
+                <button class="btn btn-sm btn-blue" (click)="enableUser(u)">
+                  <i class="ti ti-user-check"></i> Enable
+                </button>
+              </ng-container>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+</div>
+
+<!-- Reset Password Modal -->
+<div class="modal-backdrop" *ngIf="resetTarget" (click)="resetTarget = null"></div>
+<div class="modal confirm-modal" *ngIf="resetTarget" role="dialog">
+  <div class="modal-header">
+    <h2 class="modal-title"><i class="ti ti-key" style="margin-right:6px;color:var(--purple)"></i>Reset Password</h2>
+    <button class="btn btn-icon" (click)="resetTarget = null"><i class="ti ti-x"></i></button>
+  </div>
+  <div class="modal-body" style="padding:20px 18px">
+    <p style="font-size:13px;margin:0 0 14px">
+      Set a new password for <strong>{{ resetTarget!.fullName }}</strong>. They will be required to change it on next login.
+    </p>
+    <div class="form-group">
+      <label>New Password</label>
+      <input type="password" [(ngModel)]="resetPassword" placeholder="Min. 8 characters" style="width:100%">
+    </div>
+    <div class="error-box" *ngIf="resetError" style="margin-top:10px">
+      <i class="ti ti-alert-circle"></i> {{ resetError }}
+    </div>
+  </div>
+  <div class="modal-footer">
+    <button class="btn btn-ghost" (click)="resetTarget = null" [disabled]="resetSaving">Cancel</button>
+    <button class="btn btn-primary" (click)="confirmResetPassword()" [disabled]="resetSaving || !resetPassword">
+      <i class="ti ti-loader-2 spin" *ngIf="resetSaving"></i>
+      <i class="ti ti-key" *ngIf="!resetSaving"></i>
+      {{ resetSaving ? 'Resetting…' : 'Reset Password' }}
+    </button>
+  </div>
+</div>
+
+<!-- Change My Password Modal -->
+<div class="modal-backdrop" *ngIf="showChangePassword" (click)="showChangePassword = false"></div>
+<div class="modal confirm-modal" *ngIf="showChangePassword" role="dialog">
+  <div class="modal-header">
+    <h2 class="modal-title"><i class="ti ti-lock" style="margin-right:6px;color:var(--purple)"></i>Change My Password</h2>
+    <button class="btn btn-icon" (click)="showChangePassword = false"><i class="ti ti-x"></i></button>
+  </div>
+  <div class="modal-body" style="padding:20px 18px;display:flex;flex-direction:column;gap:14px">
+    <div class="form-group">
+      <label>Current Password</label>
+      <input type="password" [(ngModel)]="cpCurrent" placeholder="Enter current password" style="width:100%">
+    </div>
+    <div class="form-group">
+      <label>New Password</label>
+      <input type="password" [(ngModel)]="cpNew" placeholder="Min. 8 characters" style="width:100%">
+    </div>
+    <div class="form-group">
+      <label>Confirm New Password</label>
+      <input type="password" [(ngModel)]="cpConfirm" placeholder="Re-enter new password" style="width:100%">
+    </div>
+    <div class="error-box" *ngIf="cpError">
+      <i class="ti ti-alert-circle"></i> {{ cpError }}
+    </div>
+  </div>
+  <div class="modal-footer">
+    <button class="btn btn-ghost" (click)="showChangePassword = false" [disabled]="cpSaving">Cancel</button>
+    <button class="btn btn-primary" (click)="submitChangePassword()" [disabled]="cpSaving || !cpCurrent || !cpNew || !cpConfirm">
+      <i class="ti ti-loader-2 spin" *ngIf="cpSaving"></i>
+      <i class="ti ti-lock" *ngIf="!cpSaving"></i>
+      {{ cpSaving ? 'Saving…' : 'Change Password' }}
+    </button>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" [class.toast-error]="toastType === 'error'" *ngIf="toastMsg">
+  <i class="ti ti-circle-check" *ngIf="toastType === 'success'" style="color:var(--text-success)"></i>
+  <i class="ti ti-alert-circle" *ngIf="toastType === 'error'" style="color:var(--text-danger)"></i>
+  {{ toastMsg }}
+</div>

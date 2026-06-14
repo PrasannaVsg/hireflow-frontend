@@ -1,0 +1,102 @@
+<!-- ── Topbar ──────────────────────────────────────────────────────────── -->
+<div class="topbar">
+  <div class="page-title-block">
+    <h1 class="page-title">Audit Log</h1>
+    <div class="breadcrumb">
+      <span>HireFlow</span>
+      <i class="ti ti-chevron-right sep"></i>
+      <span class="current">Audit</span>
+    </div>
+  </div>
+  <button class="btn btn-outline btn-sm" (click)="load()">
+    <i class="ti ti-refresh"></i> Refresh
+  </button>
+</div>
+
+<!-- ── Page body ──────────────────────────────────────────────────────── -->
+<div class="page-wrap">
+  <div class="card">
+
+    <!-- Toolbar -->
+    <div class="card-toolbar">
+      <div class="toolbar-left">
+        <select class="period-select" [(ngModel)]="filterAction" (ngModelChange)="applyFilters()">
+          <option value="">All Actions</option>
+          <option *ngFor="let a of actionOptions" [value]="a">{{ actionMeta(a).label }}</option>
+        </select>
+        <select class="period-select" [(ngModel)]="filterEntity" (ngModelChange)="applyFilters()">
+          <option value="">All Entities</option>
+          <option *ngFor="let e of entityOptions" [value]="e">{{ e | titlecase }}</option>
+        </select>
+        <button *ngIf="hasFilters" class="btn btn-sm btn-ghost" (click)="clearFilters()">
+          <i class="ti ti-x"></i> Clear
+        </button>
+      </div>
+      <span class="cand-count">{{ totalElements }} event{{ totalElements !== 1 ? 's' : '' }}</span>
+    </div>
+
+    <!-- Loading -->
+    <div *ngIf="loading" class="table-loading">
+      <i class="ti ti-loader-2 spin"></i> Loading audit log…
+    </div>
+
+    <!-- Table -->
+    <div *ngIf="!loading" class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>TIMESTAMP</th>
+            <th>USER</th>
+            <th>ACTION</th>
+            <th>ENTITY TYPE</th>
+            <th>ENTITY NAME</th>
+            <th>DETAILS</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let log of logs">
+            <td class="text-tertiary fs-12 nowrap">
+              {{ log.createdAt | date:'MMM d, y · HH:mm' }}
+            </td>
+            <td>
+              <div class="user-cell">
+                <div class="avatar-sm">{{ (log.userName || '?')[0].toUpperCase() }}</div>
+                <span class="fs-12">{{ log.userName || 'System' }}</span>
+              </div>
+            </td>
+            <td>
+              <span class="action-badge" [style.background]="actionMeta(log.action).color + '22'"
+                    [style.color]="actionMeta(log.action).color">
+                {{ actionMeta(log.action).label }}
+              </span>
+            </td>
+            <td class="text-secondary fs-12">{{ log.entityType || '—' }}</td>
+            <td class="fs-12">{{ log.entityName || '—' }}</td>
+            <td class="text-tertiary fs-12 details-cell">{{ log.details || '—' }}</td>
+          </tr>
+
+          <tr *ngIf="logs.length === 0">
+            <td colspan="6">
+              <div class="empty-state">
+                <i class="ti ti-clipboard-list" style="font-size:28px;color:var(--text-tertiary)"></i>
+                <p>No audit events found</p>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Pagination -->
+    <div class="pagination" *ngIf="totalPages > 1">
+      <button class="btn btn-sm btn-ghost" (click)="prevPage()" [disabled]="page === 0">
+        <i class="ti ti-chevron-left"></i>
+      </button>
+      <span class="fs-12 text-secondary">Page {{ page + 1 }} of {{ totalPages }}</span>
+      <button class="btn btn-sm btn-ghost" (click)="nextPage()" [disabled]="(page + 1) * pageSize >= totalElements">
+        <i class="ti ti-chevron-right"></i>
+      </button>
+    </div>
+
+  </div>
+</div>
