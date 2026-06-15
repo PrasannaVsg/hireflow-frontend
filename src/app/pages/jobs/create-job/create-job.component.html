@@ -14,16 +14,21 @@
     </div>
     <div class="card-body">
 
+      <!-- ── Basic details ── -->
       <div class="form-section">Basic details</div>
 
-      <div class="form-row cols-2">
+      <div class="form-row cols-3">
         <div class="form-group">
           <label>Job title *</label>
           <input [(ngModel)]="form.title" placeholder="e.g. Senior Java Engineer">
         </div>
         <div class="form-group">
-          <label>Location *</label>
-          <input [(ngModel)]="form.location" placeholder="e.g. Bangalore">
+          <label>Job ID / Code <span class="hint-inline">(auto-generated if blank)</span></label>
+          <input [(ngModel)]="form.jobCode" placeholder="e.g. JOB-2024-001" maxlength="40">
+        </div>
+        <div class="form-group">
+          <label>Client name</label>
+          <input [(ngModel)]="form.clientName" placeholder="e.g. Acme Corp">
         </div>
       </div>
 
@@ -34,7 +39,48 @@
             <option *ngFor="let s of seniorities" [value]="s">{{ s | titlecase }}</option>
           </select>
         </div>
+        <div class="form-group">
+          <label>Experience range (years)</label>
+          <div style="display:flex;gap:8px;align-items:center">
+            <input type="number" min="0" max="50" [(ngModel)]="form.expMin" placeholder="Min" style="width:80px">
+            <span style="color:var(--text-tertiary);font-size:12px">to</span>
+            <input type="number" min="0" max="50" [(ngModel)]="form.expMax" placeholder="Max" style="width:80px">
+            <span style="color:var(--text-tertiary);font-size:11px">yrs</span>
+          </div>
+        </div>
+      </div>
 
+      <!-- Locations multi-select -->
+      <div class="form-row">
+        <div class="form-group">
+          <label>Locations</label>
+
+          <!-- Tags -->
+          <div class="location-tags" *ngIf="form.locations.length > 0">
+            <span class="loc-tag" *ngFor="let loc of form.locations">
+              {{ loc }}
+              <button class="loc-tag-remove" (click)="removeLocation(loc)">
+                <i class="ti ti-x"></i>
+              </button>
+            </span>
+          </div>
+
+          <!-- Search input + dropdown -->
+          <div style="position:relative">
+            <input type="text" [(ngModel)]="locationSearch"
+                   (focus)="showLocationDropdown = true"
+                   (blur)="closeLocationDropdown()"
+                   placeholder="Search cities… (e.g. Bangalore, Remote)"
+                   autocomplete="off">
+            <div class="loc-dropdown" *ngIf="showLocationDropdown && filteredCities.length > 0">
+              <button *ngFor="let city of filteredCities | slice:0:12"
+                      (mousedown)="toggleLocation(city)">
+                {{ city }}
+              </button>
+            </div>
+          </div>
+          <div class="hint-text">Select one or more cities or choose Remote / Hybrid</div>
+        </div>
       </div>
 
       <div class="form-row">
@@ -48,10 +94,27 @@
         <div class="form-group">
           <label>Job description *</label>
           <textarea [(ngModel)]="form.description" rows="4"
-            placeholder="Describe the role, responsibilities and what makes it a great opportunity..."></textarea>
+            placeholder="Describe the role, responsibilities and what makes it a great opportunity…"></textarea>
         </div>
       </div>
 
+      <!-- ── Budget ── -->
+      <div class="form-section">Budget</div>
+
+      <div class="form-row cols-2">
+        <div class="form-group">
+          <label>Budget range (₹ LPA)</label>
+          <div style="display:flex;gap:8px;align-items:center">
+            <input type="number" min="0" [(ngModel)]="form.budgetMin" placeholder="Min" style="width:100px">
+            <span style="color:var(--text-tertiary);font-size:12px">to</span>
+            <input type="number" min="0" [(ngModel)]="form.budgetMax" placeholder="Max" style="width:100px">
+            <span style="color:var(--text-tertiary);font-size:11px">LPA</span>
+          </div>
+          <div class="hint-text">Used for reports and offer vs budget tracking</div>
+        </div>
+      </div>
+
+      <!-- ── AI ranking settings ── -->
       <div class="form-section">AI ranking settings</div>
 
       <div class="form-row cols-2">
@@ -89,6 +152,40 @@
         </div>
       </div>
 
+      <!-- ── Email template ── -->
+      <div class="form-section">Stage change email template</div>
+
+      <div class="toggle-row" style="margin-bottom:14px"
+           (click)="form.autoEmailOnStageChange = !form.autoEmailOnStageChange">
+        <div class="toggle-info">
+          <div class="toggle-title">Auto-email on stage change</div>
+          <div class="toggle-sub">
+            When ON — an email is automatically sent to the candidate whenever
+            their pipeline stage changes to a candidate-facing stage.
+          </div>
+        </div>
+        <div class="toggle-switch" [class.on]="form.autoEmailOnStageChange"></div>
+      </div>
+
+      <div class="form-row" *ngIf="form.autoEmailOnStageChange">
+        <div class="form-group">
+          <label>Custom email template <span class="hint">(optional — leave blank to use defaults)</span></label>
+          <textarea [(ngModel)]="form.mailTemplate" rows="5"
+            placeholder="Dear [[candidateName]],
+
+We are pleased to inform you that you have been moved to the [[stage]] stage for the [[jobTitle]] position.
+
+Regards,
+Talent Acquisition Team"></textarea>
+          <div class="hint-text">
+            Tokens: <code>&#91;&#91;candidateName&#93;&#93;</code> &nbsp;
+            <code>&#91;&#91;jobTitle&#93;&#93;</code> &nbsp;
+            <code>&#91;&#91;stage&#93;&#93;</code>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Auto batch process ── -->
       <div class="form-section">Auto batch process</div>
 
       <div class="toggle-row" (click)="toggleAuto()">

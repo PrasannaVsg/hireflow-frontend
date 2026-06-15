@@ -86,9 +86,10 @@
         <tbody>
           <tr *ngFor="let job of filteredJobs">
 
-            <!-- Title -->
+            <!-- Title + Job Code -->
             <td>
               <a [routerLink]="['/candidates', job.id]" class="job-title-link">{{ job.title }}</a>
+              <div *ngIf="job.jobCode" class="job-code-label">{{ job.jobCode }}</div>
             </td>
 
             <!-- Status badge -->
@@ -102,7 +103,7 @@
             <td class="text-secondary fs-12">{{ job.seniority | titlecase }}</td>
 
             <!-- Location -->
-            <td class="text-secondary fs-12">{{ job.location || '—' }}</td>
+            <td class="text-secondary fs-12">{{ (job.locations && job.locations.length) ? job.locations.join(', ') : '—' }}</td>
 
             <!-- Candidates -->
             <td class="text-secondary fs-12">{{ candidateCount(job) }}</td>
@@ -192,7 +193,7 @@
     <div class="view-meta-row">
       <span class="badge" [ngClass]="viewingJob.status | lowercase">{{ viewingJob.status | titlecase }}</span>
       <span class="view-meta-item" *ngIf="viewingJob.seniority"><i class="ti ti-chart-bar"></i> {{ viewingJob.seniority | titlecase }}</span>
-      <span class="view-meta-item" *ngIf="viewingJob.location"><i class="ti ti-map-pin"></i> {{ viewingJob.location }}</span>
+      <span class="view-meta-item" *ngIf="viewingJob.locations?.length"><i class="ti ti-map-pin"></i> {{ viewingJob.locations.join(', ') }}</span>
       <span class="view-meta-item" *ngIf="viewingJob.requiredSkills"><i class="ti ti-code"></i> {{ viewingJob.requiredSkills }}</span>
     </div>
 
@@ -276,6 +277,7 @@
 
   <div class="modal-body">
 
+    <!-- Row 1: Title + Client Name -->
     <div class="form-row cols-2">
       <div class="form-group">
         <label for="job-title">TITLE <span class="required">*</span></label>
@@ -283,19 +285,50 @@
                [(ngModel)]="form.title" maxlength="200">
       </div>
       <div class="form-group">
+        <label for="job-client">CLIENT NAME</label>
+        <input id="job-client" type="text" placeholder="e.g. Acme Corp"
+               [(ngModel)]="form.clientName" maxlength="200">
+      </div>
+    </div>
+
+    <!-- Row 2: Seniority + Location -->
+    <div class="form-row cols-2">
+      <div class="form-group">
         <label for="job-seniority">SENIORITY</label>
         <select id="job-seniority" [(ngModel)]="form.seniority">
           <option *ngFor="let s of seniorityOptions" [value]="s">{{ s | titlecase }}</option>
         </select>
       </div>
+      <div class="form-group">
+        <label for="job-location">LOCATION <span class="hint">(comma-separated)</span></label>
+        <input id="job-location" type="text" placeholder="e.g. Bangalore, Remote"
+               [ngModel]="form.locations.join(', ')"
+               (ngModelChange)="parseLocations($event)">
+      </div>
     </div>
 
+    <!-- Row 3: Experience range + Budget range -->
     <div class="form-row cols-2">
       <div class="form-group">
-        <label for="job-location">LOCATION</label>
-        <input id="job-location" type="text" placeholder="e.g. Remote · US"
-               [(ngModel)]="form.location" maxlength="120">
+        <label>EXPERIENCE (YRS)</label>
+        <div style="display:flex;gap:8px;align-items:center">
+          <input type="number" min="0" max="50" [(ngModel)]="form.expMin" placeholder="Min" style="width:70px">
+          <span style="color:var(--text-tertiary);font-size:12px">–</span>
+          <input type="number" min="0" max="50" [(ngModel)]="form.expMax" placeholder="Max" style="width:70px">
+        </div>
       </div>
+      <div class="form-group">
+        <label>BUDGET (₹ LPA)</label>
+        <div style="display:flex;gap:8px;align-items:center">
+          <input type="number" min="0" [(ngModel)]="form.budgetMin" placeholder="Min" style="width:80px">
+          <span style="color:var(--text-tertiary);font-size:12px">–</span>
+          <input type="number" min="0" [(ngModel)]="form.budgetMax" placeholder="Max" style="width:80px">
+        </div>
+      </div>
+    </div>
+
+    <!-- Row 4: Skills -->
+    <div class="form-row">
       <div class="form-group">
         <label for="job-skills">REQUIRED SKILLS <span class="hint">(comma-separated)</span></label>
         <input id="job-skills" type="text" placeholder="e.g. Java, Spring Boot, PostgreSQL"
@@ -303,9 +336,10 @@
       </div>
     </div>
 
+    <!-- Row 5: Description -->
     <div class="form-group">
       <label for="job-desc">JOB DESCRIPTION <span class="required">*</span></label>
-      <textarea id="job-desc" rows="5" placeholder="Paste or type the full job description…"
+      <textarea id="job-desc" rows="4" placeholder="Paste or type the full job description…"
                 [(ngModel)]="form.description"></textarea>
     </div>
 
@@ -343,6 +377,25 @@
           </div>
           <div class="toggle-switch" [class.on]="form.autoProcessEnabled"></div>
         </div>
+      </div>
+    </div>
+
+    <div class="modal-section">Email Automation</div>
+
+    <div class="toggle-row" style="margin-bottom:10px" (click)="form.autoEmailOnStageChange = !form.autoEmailOnStageChange">
+      <div class="toggle-info">
+        <div class="toggle-title" style="font-size:12px">Auto-email on stage change</div>
+        <div class="toggle-sub">Send candidate an email whenever their stage changes</div>
+      </div>
+      <div class="toggle-switch" [class.on]="form.autoEmailOnStageChange"></div>
+    </div>
+
+    <div class="form-group" *ngIf="form.autoEmailOnStageChange">
+      <label>MAIL TEMPLATE <span class="hint">(optional — uses default if blank)</span></label>
+      <textarea rows="4" [(ngModel)]="form.mailTemplate"
+                placeholder="Dear [[candidateName]], you have been moved to [[stage]] for [[jobTitle]]."></textarea>
+      <div style="font-size:10px;color:var(--text-tertiary);margin-top:4px">
+        Tokens: <code>[[candidateName]]</code> &nbsp; <code>[[jobTitle]]</code> &nbsp; <code>[[stage]]</code>
       </div>
     </div>
 

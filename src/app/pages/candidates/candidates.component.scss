@@ -81,13 +81,18 @@
 }
 
 // ── Table ─────────────────────────────────────────────────────────────────
-.table-wrap {
+.table-scroll-outer {
   width: 100%;
   overflow-x: auto;
 
   &::-webkit-scrollbar { height: 4px; }
   &::-webkit-scrollbar-track { background: var(--bg-secondary); }
   &::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+}
+
+.table-wrap {
+  width: 100%;
+  overflow: visible;
 }
 
 table {
@@ -174,12 +179,48 @@ table {
   border: none;
   white-space: nowrap;
 
-  &.stage-sourced    { background: rgba(140,140,160,0.15); color: var(--text-secondary); }
-  &.stage-screening  { background: rgba(186,117,23,0.2);  color: #d4972a; }
-  &.stage-interview  { background: rgba(83,74,183,0.2);   color: var(--purple); }
-  &.stage-offer      { background: rgba(56,140,220,0.2);  color: #388cdc; }
-  &.stage-hired      { background: rgba(74,179,74,0.2);   color: #4ab34a; }
-  &.stage-rejected   { background: rgba(220,60,60,0.2);   color: var(--red); }
+  &.stage-sourced           { background: rgba(140,140,160,0.15); color: var(--text-secondary); }
+  &.stage-screening         { background: rgba(186,117,23,0.2);  color: #d4972a; }
+  &.stage-l1_shortlist      { background: rgba(83,74,183,0.2);   color: var(--purple); }
+  &.stage-l1_reject         { background: rgba(220,60,60,0.18);  color: var(--red); }
+  &.stage-l2_shortlist      { background: rgba(56,140,220,0.2);  color: #388cdc; }
+  &.stage-l2_reject         { background: rgba(220,60,60,0.25);  color: #d94040; }
+  &.stage-client_shortlist  { background: rgba(16,185,129,0.18); color: #10b981; }
+  &.stage-client_rejected   { background: rgba(220,60,60,0.3);   color: #c03030; }
+  &.stage-waiting_feedback  { background: rgba(245,158,11,0.2);  color: #c98a0a; }
+  &.stage-final_select      { background: rgba(16,185,129,0.25); color: #0e9e6e; }
+  &.stage-offer_released    { background: rgba(56,140,220,0.25); color: #2678c0; }
+  &.stage-hired             { background: rgba(74,179,74,0.2);   color: #4ab34a; }
+}
+
+.stage-dropdown-fixed {
+  position: fixed;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  box-shadow: 0 6px 24px rgba(0,0,0,0.35);
+  z-index: 99999;
+  min-width: 160px;
+  max-height: 300px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 4px 0;
+
+  button {
+    display: block;
+    width: 100%;
+    text-align: left;
+    padding: 8px 14px;
+    font-size: 12px;
+    color: var(--text-secondary);
+    background: none;
+    border: none;
+    cursor: pointer;
+    white-space: nowrap;
+
+    &:hover  { background: var(--bg-secondary); color: var(--text-primary); }
+    &.active { color: var(--purple); font-weight: 600; }
+  }
 }
 
 .stage-dropdown {
@@ -189,10 +230,12 @@ table {
   background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
-  box-shadow: 0 6px 20px rgba(0,0,0,0.25);
-  z-index: 200;
-  min-width: 130px;
-  overflow: hidden;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.35);
+  z-index: 9999;
+  min-width: 160px;
+  max-height: 280px;
+  overflow-y: auto;
+  overflow-x: hidden;
 
   button {
     display: block;
@@ -586,6 +629,98 @@ table {
   transform: translate(-50%, -50%);
   z-index: 501;
 }
+
+// ── Expandable rows ───────────────────────────────────────────────────────
+.expand-cell {
+  width: 32px;
+  cursor: pointer;
+  text-align: center;
+  color: var(--text-tertiary);
+  user-select: none;
+}
+
+tbody tr {
+  cursor: pointer;
+  &.row-expanded { background: var(--bg-secondary); }
+}
+
+.detail-row {
+  cursor: default;
+  background: var(--bg-secondary) !important;
+  &:hover { background: var(--bg-secondary) !important; }
+
+  td { padding: 0 !important; }
+}
+
+.detail-panel {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  padding: 14px 16px 16px 42px;
+  border-bottom: 2px solid var(--purple);
+}
+
+.detail-section {
+  min-width: 160px;
+  max-width: 400px;
+}
+
+.detail-label {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+  margin-bottom: 5px;
+}
+
+.detail-text {
+  font-size: 12px;
+  color: var(--text-secondary);
+  line-height: 1.55;
+  white-space: normal;
+}
+
+.breakdown-cell { max-width: 100%; }
+
+// ── Recommendation badge ──────────────────────────────────────────────────
+.rec-badge {
+  display: inline-block;
+  padding: 1px 7px;
+  border-radius: 10px;
+  font-size: 10px;
+  font-weight: 700;
+  margin-top: 4px;
+  letter-spacing: 0.03em;
+
+  &.rec-yes { background: rgba(74,179,74,0.18);  color: #2e7d32; }
+  &.rec-no  { background: rgba(220,60,60,0.15);  color: #c62828; }
+}
+
+// ── Candidate contact row (email + phone) ─────────────────────────────────
+.cand-contact {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  margin-top: 2px;
+
+  span {
+    font-size: 11px;
+    color: var(--text-tertiary);
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 170px;
+  }
+}
+
+.badge-sm { font-size: 9px; padding: 1px 6px; }
+.fs-10    { font-size: 10px; }
+.fs-11    { font-size: 11px; }
+.fs-12    { font-size: 12px; }
 
 // ── Animations ────────────────────────────────────────────────────────────
 @keyframes spin { to { transform: rotate(360deg); } }

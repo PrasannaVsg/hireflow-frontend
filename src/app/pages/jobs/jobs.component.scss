@@ -169,6 +169,15 @@ table th {
   background: var(--bg-secondary);
 }
 
+// ── Job code label ────────────────────────────────────────────────────────
+.job-code-label {
+  font-size: 10px;
+  color: var(--text-tertiary);
+  font-family: monospace;
+  margin-top: 2px;
+  letter-spacing: 0.02em;
+}
+
 // ── Job title link ────────────────────────────────────────────────────────
 .job-title-link {
   font-size: 13px;

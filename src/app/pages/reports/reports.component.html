@@ -1,0 +1,113 @@
+<div class="topbar">
+  <div class="page-title-block">
+    <h1 class="page-title">Reports</h1>
+    <div class="breadcrumb"><span>HireFlow</span> <i class="ti ti-chevron-right sep"></i> <span class="current">Reports</span></div>
+  </div>
+</div>
+
+<div class="page-wrap">
+
+  <!-- Summary KPIs -->
+  <div class="kpi-row" *ngIf="!loading">
+    <div class="kpi-card">
+      <div class="kpi-value">{{ filtered.length }}</div>
+      <div class="kpi-label">Jobs tracked</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-value">{{ totalHired }}</div>
+      <div class="kpi-label">Total hired</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-value">{{ totalOffered }}</div>
+      <div class="kpi-label">Offers made</div>
+    </div>
+    <div class="kpi-card kpi-saving">
+      <div class="kpi-value">{{ totalSaving >= 0 ? '↓' : '↑' }} ₹{{ (totalSaving < 0 ? -totalSaving : totalSaving).toLocaleString('en-IN') }}</div>
+      <div class="kpi-label">{{ totalSaving >= 0 ? 'Budget saved' : 'Over budget' }}</div>
+    </div>
+  </div>
+
+  <!-- Toolbar -->
+  <div class="card">
+    <div class="card-toolbar">
+      <div class="search-wrap">
+        <i class="ti ti-search search-icon"></i>
+        <input class="search-input" type="text" [(ngModel)]="searchQuery" placeholder="Search jobs, clients…">
+      </div>
+      <div class="toolbar-right">
+        <select class="period-select" [(ngModel)]="statusFilter">
+          <option value="">All statuses</option>
+          <option value="OPEN">Open</option>
+          <option value="DRAFT">Draft</option>
+          <option value="CLOSED">Closed</option>
+          <option value="ARCHIVED">Archived</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Loading -->
+    <div *ngIf="loading" class="loading-state">
+      <i class="ti ti-loader-2 spin"></i> Loading reports…
+    </div>
+
+    <!-- Table -->
+    <div *ngIf="!loading" class="table-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>JOB</th>
+            <th>CLIENT</th>
+            <th>STATUS</th>
+            <th class="num-col">CANDIDATES</th>
+            <th class="num-col">HIRED</th>
+            <th>BUDGET RANGE</th>
+            <th>AVG OFFER</th>
+            <th>BUDGET vs OFFER</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let j of filtered">
+            <td>
+              <div class="job-title">{{ j.title }}</div>
+              <div class="job-code" *ngIf="j.jobCode">{{ j.jobCode }}</div>
+            </td>
+            <td class="text-muted">{{ j.clientName || '—' }}</td>
+            <td>
+              <span class="status-pill" [ngClass]="'s-' + (j.status | lowercase)">{{ j.status }}</span>
+            </td>
+            <td class="num-col">{{ j.totalCandidates }}</td>
+            <td class="num-col">
+              <span *ngIf="j.hiredCount > 0" class="hired-pill">{{ j.hiredCount }}</span>
+              <span *ngIf="j.hiredCount === 0" class="text-muted">0</span>
+            </td>
+            <td class="text-muted">{{ budgetLabel(j) }}</td>
+            <td>
+              <span *ngIf="j.avgOfferAmount" class="offer-val">{{ formatLPA(j.avgOfferAmount) }}</span>
+              <span *ngIf="!j.avgOfferAmount" class="text-muted">—</span>
+            </td>
+            <td>
+              <span class="saving-badge" [ngClass]="savingClass(j)">{{ savingLabel(j) }}</span>
+            </td>
+          </tr>
+
+          <tr *ngIf="filtered.length === 0">
+            <td colspan="8">
+              <div class="empty-state">
+                <i class="ti ti-chart-bar" style="font-size:28px;color:var(--text-tertiary)"></i>
+                <p>No data yet. Create jobs and hire candidates to see reports.</p>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Note -->
+  <div class="report-note" *ngIf="!loading">
+    <i class="ti ti-info-circle"></i>
+    Budget savings are calculated as <strong>Budget Max − Average Offer</strong> for hired/offered candidates.
+    Positive = under budget (savings). Negative = over budget.
+  </div>
+
+</div>

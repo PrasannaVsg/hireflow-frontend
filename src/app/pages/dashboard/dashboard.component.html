@@ -133,7 +133,7 @@
               <div class="req-dot" style="background:#4ab34a"></div>
               <div class="req-info">
                 <div class="req-title">{{ j.title }}</div>
-                <div class="req-meta">{{ j.seniority | titlecase }} · {{ j.location || 'Remote' }}</div>
+                <div class="req-meta">{{ j.seniority | titlecase }} · {{ (j.locations && j.locations.length) ? j.locations[0] : 'Remote' }}</div>
               </div>
               <i class="ti ti-chevron-right req-arrow"></i>
             </a>

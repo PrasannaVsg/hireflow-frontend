@@ -34,11 +34,19 @@ export class JobsComponent implements OnInit {
   private blankForm(): CreateJobRequest {
     return {
       title: '',
+      jobCode: '',
       description: '',
-      location: '',
+      clientName: '',
+      locations: [],
       seniority: 'MID',
+      expMin: null,
+      expMax: null,
       requiredSkills: '',
+      budgetMin: null,
+      budgetMax: null,
+      mailTemplate: '',
       autoProcessEnabled: false,
+      autoEmailOnStageChange: false,
       shortlistSize: 10,
       scoreThreshold: 60,
       emailTone: 'PROFESSIONAL'
@@ -61,7 +69,7 @@ export class JobsComponent implements OnInit {
     if (q) {
       list = list.filter(j =>
         j.title.toLowerCase().includes(q) ||
-        (j.location || '').toLowerCase().includes(q)
+        (j.locations ?? []).join(' ').toLowerCase().includes(q)
       );
     }
 
@@ -99,11 +107,19 @@ export class JobsComponent implements OnInit {
     this.editingJob = job;
     this.form = {
       title: job.title,
+      jobCode: job.jobCode ?? '',
       description: job.description,
-      location: job.location ?? '',
+      clientName: job.clientName ?? '',
+      locations: job.locations ?? [],
       seniority: job.seniority ?? 'MID',
+      expMin: job.expMin ?? null,
+      expMax: job.expMax ?? null,
       requiredSkills: job.requiredSkills ?? '',
+      budgetMin: job.budgetMin ?? null,
+      budgetMax: job.budgetMax ?? null,
+      mailTemplate: job.mailTemplate ?? '',
       autoProcessEnabled: job.autoProcessEnabled,
+      autoEmailOnStageChange: job.autoEmailOnStageChange ?? false,
       shortlistSize: job.autoShortlistSize ?? 10,
       scoreThreshold: job.autoScoreThreshold ?? 60,
       emailTone: job.autoEmailTone ?? 'PROFESSIONAL'
@@ -200,5 +216,9 @@ export class JobsComponent implements OnInit {
 
   hasEmbedding(job: Job): boolean {
     return (job as any).hasEmbedding ?? false;
+  }
+
+  parseLocations(value: string): void {
+    this.form.locations = value.split(',').map(s => s.trim()).filter(s => s.length > 0);
   }
 }

@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { OutreachService } from '../../services/outreach.service';
@@ -11,14 +11,24 @@ import { OutreachEmail } from '../../models/models';
   templateUrl: './outreach.component.html',
   styleUrls: ['./outreach.component.scss']
 })
-export class OutreachComponent {
+export class OutreachComponent implements OnInit {
   private outreachService = inject(OutreachService);
 
-  // No list endpoint exists on the backend. Emails are added to this array
-  // when drafted from the Candidates page via outreachService.draft().
   emails: OutreachEmail[] = [];
   loading = false;
   toastMsg = '';
+
+  ngOnInit(): void {
+    this.loadEmails();
+  }
+
+  loadEmails(): void {
+    this.loading = true;
+    this.outreachService.list().subscribe({
+      next: page => { this.emails = page.content; this.loading = false; },
+      error: () => { this.loading = false; this.toast('Failed to load outreach emails.'); }
+    });
+  }
 
   approve(email: OutreachEmail): void {
     const original = { ...email };

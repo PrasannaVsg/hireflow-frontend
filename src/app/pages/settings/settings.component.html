@@ -1,0 +1,54 @@
+<div class="page-header">
+  <h1 class="page-title">Settings</h1>
+</div>
+
+<div class="settings-body" *ngIf="!loading; else spinner">
+
+  <div class="settings-card">
+    <div class="card-title">
+      <i class="ti ti-mail-cog"></i> Outgoing Mail Configuration
+    </div>
+    <p class="card-desc">
+      Configure the From address used when HireFlow sends automated stage-change emails to candidates.
+      Leave blank to use the system default address.
+    </p>
+
+    <div class="form-group">
+      <label class="form-label">From Email Address</label>
+      <input class="form-input"
+             type="email"
+             [(ngModel)]="mailFrom"
+             placeholder="e.g. careers@yourcompany.com" />
+      <span class="hint">Candidates will see this address as the sender.</span>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Reply-To Address <span class="optional">(optional)</span></label>
+      <input class="form-input"
+             type="email"
+             [(ngModel)]="mailReplyTo"
+             placeholder="e.g. hr@yourcompany.com" />
+      <span class="hint">Candidate replies go here. Defaults to the From address if left blank.</span>
+    </div>
+
+    <div class="form-actions">
+      <button class="btn-primary" (click)="save()" [disabled]="saving">
+        <i class="ti ti-device-floppy"></i>
+        {{ saving ? 'Saving…' : 'Save Settings' }}
+      </button>
+    </div>
+  </div>
+
+</div>
+
+<ng-template #spinner>
+  <div class="loading-state">
+    <div class="spinner"></div>
+    <span>Loading settings…</span>
+  </div>
+</ng-template>
+
+<div class="toast" *ngIf="toastMsg" [class.toast-error]="toastType === 'error'">
+  <i class="ti" [class.ti-check]="toastType === 'success'" [class.ti-alert-triangle]="toastType === 'error'"></i>
+  {{ toastMsg }}
+</div>

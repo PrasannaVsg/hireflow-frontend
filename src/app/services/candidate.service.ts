@@ -37,8 +37,8 @@ export class CandidateService {
     return this.http.get<{ state: string; total: number; processed: number; succeeded: number; failed: number }>(`${this.base}/batch-upload/${jobId}/status`);
   }
 
-  updateStage(id: string, stage: PipelineStage): Observable<Candidate> {
-    return this.http.patch<Candidate>(`${this.base}/${id}/stage`, { targetStage: stage });
+  updateStage(id: string, stage: PipelineStage, offerAmount?: number, rejectionReason?: string): Observable<Candidate> {
+    return this.http.patch<Candidate>(`${this.base}/${id}/stage`, { targetStage: stage, offerAmount, rejectionReason });
   }
 
   getResumeUrl(id: string): Observable<string> {

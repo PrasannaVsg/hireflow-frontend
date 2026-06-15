@@ -4,51 +4,133 @@
     <select [(ngModel)]="selectedJobId" (change)="onJobChange()" class="job-select">
       <option *ngFor="let j of jobs" [value]="j.id">{{ j.title }}</option>
     </select>
-    <span class="card-subtitle">{{ candidates.length }} candidates</span>
+    <span class="cand-total">{{ candidates.length }} candidates</span>
   </div>
 </div>
 
 <div class="page-wrap">
 
-  <div class="pipeline-board">
-    <div class="pipeline-col" *ngFor="let stage of stages">
+  <!-- Stage filter bar -->
+  <div class="stage-nav-wrap">
+    <!-- All pill -->
+    <button class="stage-pill all-pill" [class.active]="activeStage === 'ALL'" (click)="setStage('ALL')">
+      All
+      <span class="pill-count" *ngIf="candidates.length > 0">{{ candidates.length }}</span>
+    </button>
 
-      <div class="col-header" [class]="stageHeaderClass(stage)">
-        <span class="col-title">{{ stageLabel(stage) }}</span>
-        <span class="col-count">{{ candidatesForStage(stage).length }}</span>
-      </div>
+    <div class="stage-divider"></div>
 
-      <div
-        class="pipeline-card"
-        *ngFor="let c of candidatesForStage(stage)"
-        [class.hired-card]="stage === 'HIRED'"
-        [class.rejected-card]="stage === 'REJECTED'">
-        <div class="card-name">{{ c.fullName }}</div>
-        <div class="card-meta">{{ c.source | titlecase }}</div>
-        <div class="card-score" *ngIf="c.aiScore">
-          <i class="ti ti-bolt" style="font-size:10px"></i>
-          <span [class]="scoreClass(c.aiScore)">{{ c.aiScore }}</span>
+    <div class="stage-groups">
+      <div class="stage-group" *ngFor="let g of stageGroups">
+        <div class="group-label">{{ g.label }}</div>
+        <div class="group-stages">
+          <button
+            class="stage-pill"
+            *ngFor="let s of g.stages"
+            [class.active]="s === activeStage"
+            [class.reject]="isRejectStage(s)"
+            [class.hired]="s === 'HIRED'"
+            (click)="setStage(s)">
+            {{ stageLabel(s) }}
+            <span class="pill-count" *ngIf="countForStage(s) > 0">{{ countForStage(s) }}</span>
+          </button>
         </div>
-        <div class="card-actions">
-          <div class="move-dd">
-            <button class="btn btn-sm move-btn">Move <i class="ti ti-chevron-down" style="font-size:9px"></i></button>
-            <div class="move-menu">
-              <div class="move-opt" *ngFor="let s of stages" (click)="moveStage(c, s)" [class.current]="s === stage" [class.danger]="s === 'REJECTED'">
-                {{ stageLabel(s) }}
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading -->
+  <div class="loading-state" *ngIf="loading">
+    <i class="ti ti-loader spin"></i> Loading candidates…
+  </div>
+
+  <!-- Empty state -->
+  <div class="empty-state" *ngIf="!loading && activeCandidates.length === 0">
+    <i class="ti ti-users" style="font-size:28px;color:var(--border)"></i>
+    <div class="empty-text">
+      {{ activeStage === 'ALL' ? 'No candidates yet' : 'No candidates in ' + stageLabel(activeStage) }}
+    </div>
+  </div>
+
+  <!-- Candidates table -->
+  <div class="table-wrap" *ngIf="!loading && activeCandidates.length > 0">
+    <table class="pipe-table">
+      <thead>
+        <tr>
+          <th>Candidate</th>
+          <th>Stage</th>
+          <th>Source</th>
+          <th>AI Score</th>
+          <th>Phone</th>
+          <th style="width:80px">Move</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let c of activeCandidates"
+            [class.row-reject]="isRejectStage(c.pipelineStage)"
+            [class.row-hired]="c.pipelineStage === 'HIRED'">
+
+          <!-- Name + email -->
+          <td>
+            <div class="cand-name-cell">
+              <div class="cand-avatar">{{ c.fullName.charAt(0) }}</div>
+              <div>
+                <div class="cand-name">{{ c.fullName }}</div>
+                <div class="cand-email">{{ c.email }}</div>
               </div>
             </div>
-          </div>
-        </div>
-      </div>
+          </td>
 
-      <div class="empty-col" *ngIf="candidatesForStage(stage).length === 0">
-        <i class="ti ti-drag-drop" style="font-size:18px;color:var(--border)"></i>
-        <div style="font-size:10px;color:var(--text-tertiary);margin-top:4px">Empty</div>
-      </div>
+          <!-- Stage badge -->
+          <td>
+            <span class="stage-badge"
+              [class.badge-reject]="isRejectStage(c.pipelineStage)"
+              [class.badge-hired]="c.pipelineStage === 'HIRED'"
+              [class.badge-active]="c.pipelineStage === 'SCREENING' || c.pipelineStage === 'L1_SHORTLIST' || c.pipelineStage === 'L2_SHORTLIST' || c.pipelineStage === 'CLIENT_SHORTLIST' || c.pipelineStage === 'FINAL_SELECT'">
+              {{ stageLabel(c.pipelineStage) }}
+            </span>
+          </td>
 
-    </div>
+          <!-- Source -->
+          <td><span class="source-chip">{{ c.source | titlecase }}</span></td>
+
+          <!-- AI Score -->
+          <td>
+            <span *ngIf="c.aiScore" class="score-chip" [class]="scoreClass(c.aiScore)">
+              <i class="ti ti-bolt"></i>{{ c.aiScore }}
+            </span>
+            <span *ngIf="!c.aiScore" class="no-score">—</span>
+          </td>
+
+          <!-- Phone -->
+          <td class="phone-cell">{{ c.phone || '—' }}</td>
+
+          <!-- Move -->
+          <td (click)="$event.stopPropagation()">
+            <div class="move-dd" [class.open]="openMenuId === c.id">
+              <button class="btn btn-sm move-btn" (click)="toggleMenu(c.id, $event)">
+                Move <i class="ti ti-chevron-down" style="font-size:9px"></i>
+              </button>
+              <div class="move-menu" *ngIf="openMenuId === c.id">
+                <div class="move-menu-inner">
+                  <div
+                    class="move-opt"
+                    *ngFor="let s of moveTargets(c.pipelineStage)"
+                    (click)="moveStage(c, s); openMenuId = null"
+                    [class.danger]="isRejectStage(s)"
+                    [class.success]="s === 'HIRED'">
+                    {{ stageLabel(s) }}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </td>
+
+        </tr>
+      </tbody>
+    </table>
   </div>
 
 </div>
 
-<div class="toast" *ngIf="toastMsg"><i class="ti ti-check" style="color:var(--text-success)"></i> {{ toastMsg }}</div>
+<div class="toast" *ngIf="toastMsg"><i class="ti ti-check"></i> {{ toastMsg }}</div>

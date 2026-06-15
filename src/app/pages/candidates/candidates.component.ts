@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject } from '@angular/core';
 import { DomSanitizer, SafeHtml, SafeResourceUrl } from '@angular/platform-browser';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -59,16 +59,53 @@ export class CandidatesComponent implements OnInit {
   rankingError = '';
   rankProgress = 0;
   rankProgressText = '';
+  rankingCandidateId: string | null = null;
+
+  // Sort
+  sortByScore = false;
 
   // UI
   toastMsg = '';
   stageFilter: PipelineStage | '' = '';
   openDropdownId: string | null = null;
+  dropdownPos = { top: 0, left: 0 };
+  expandedCandidateId: string | null = null;
+
+  private closeOnScroll = () => { this.openDropdownId = null; };
+  private closeOnResize = () => { this.openDropdownId = null; };
 
   // Resume dialog
   resumeDialog: { name: string; url: string; isPdf: boolean; safeUrl?: SafeResourceUrl; docxHtml?: SafeHtml; docxLoading?: boolean } | null = null;
 
-  stages: PipelineStage[] = ['SOURCED','SCREENING','INTERVIEW','OFFER','HIRED','REJECTED'];
+  stages: PipelineStage[] = [
+    'SOURCED','SCREENING',
+    'L1_SHORTLIST','L1_REJECT',
+    'L2_SHORTLIST','L2_REJECT',
+    'CLIENT_SHORTLIST','CLIENT_REJECTED',
+    'WAITING_FEEDBACK','FINAL_SELECT','OFFER_RELEASED','HIRED'
+  ];
+
+  readonly stageLabels: Record<PipelineStage, string> = {
+    SOURCED:          'Sourced',
+    SCREENING:        'Screening',
+    L1_SHORTLIST:     'L1 Shortlist',
+    L1_REJECT:        'L1 Reject',
+    L2_SHORTLIST:     'L2 Shortlist',
+    L2_REJECT:        'L2 Reject',
+    CLIENT_SHORTLIST: 'Client Shortlist',
+    CLIENT_REJECTED:  'Client Rejected',
+    WAITING_FEEDBACK: 'Waiting Feedback',
+    FINAL_SELECT:     'Final Select',
+    OFFER_RELEASED:   'Offer Released',
+    HIRED:            'Hired'
+  };
+
+  // Offer / rejection modal
+  showOfferModal = false;
+  pendingStageCandidate: Candidate | null = null;
+  pendingStage: PipelineStage | null = null;
+  offerAmountInput: number | null = null;
+  rejectionReasonInput = '';
 
   // ── Getters ────────────────────────────────────────────────────────────
   get activeJobs() {
@@ -93,6 +130,17 @@ export class CandidatesComponent implements OnInit {
         (c.jobTitle || '').toLowerCase().includes(q)
       );
     }
+
+    if (this.sortByScore) {
+      list = [...list].sort((a, b) => {
+        const ra = this.rankingFor(a.id);
+        const rb = this.rankingFor(b.id);
+        const sa = ra?.llmScore ?? -1;
+        const sb = rb?.llmScore ?? -1;
+        return sb - sa;
+      });
+    }
+
     return list;
   }
 
@@ -102,6 +150,8 @@ export class CandidatesComponent implements OnInit {
 
   // ── Lifecycle ──────────────────────────────────────────────────────────
   ngOnInit(): void {
+    window.addEventListener('scroll', this.closeOnScroll, true);
+    window.addEventListener('resize', this.closeOnResize);
     const paramJobId = this.route.snapshot.paramMap.get('jobId') ?? '';
     this.loading = true;
     this.jobService.list(0, 100).subscribe({
@@ -296,6 +346,23 @@ export class CandidatesComponent implements OnInit {
   closeResumeDialog(): void { this.resumeDialog = null; }
 
   // ── Ranking ────────────────────────────────────────────────────────────
+  rankOneCandidate(c: Candidate): void {
+    const jobId = c.jobId || this.selectedJobId;
+    if (!jobId) return;
+    this.rankingCandidateId = c.id;
+    this.rankingService.rankSingle(jobId, c.id).subscribe({
+      next: r => {
+        this.rankings = [...this.rankings.filter(x => x.candidateId !== r.candidateId), r];
+        this.rankingCandidateId = null;
+        this.toast(`${c.fullName} scored: ${r.llmScore ?? 'N/A'}`);
+      },
+      error: (err) => {
+        this.rankingCandidateId = null;
+        this.toast(err?.error?.message ?? `Ranking failed for ${c.fullName}`);
+      }
+    });
+  }
+
   runRanking(jobId?: string): void {
     const targetJobId = jobId || this.selectedJobId;
     if (!targetJobId) return;
@@ -310,7 +377,8 @@ export class CandidatesComponent implements OnInit {
       i++;
       if (i >= steps.length) {
         clearInterval(tick);
-        this.rankingService.run(targetJobId, 10).subscribe({
+        const sizeToRank = Math.max(this.allCandidates.length, 50);
+        this.rankingService.run(targetJobId, sizeToRank).subscribe({
           next: r  => {
             this.rankings = [...this.rankings.filter(x => !r.find(n => n.candidateId === x.candidateId)), ...r];
             this.rankProgress = 100;
@@ -335,27 +403,81 @@ export class CandidatesComponent implements OnInit {
     });
   }
 
+  stageLabel(s: PipelineStage): string { return this.stageLabels[s] ?? s; }
+
   // ── Stage ──────────────────────────────────────────────────────────────
+  private readonly REJECTION_STAGES: PipelineStage[] = ['L1_REJECT','L2_REJECT','CLIENT_REJECTED'];
+
   updateStage(c: Candidate, stage: PipelineStage): void {
+    this.openDropdownId = null;
+    if (stage === 'FINAL_SELECT') {
+      this.pendingStageCandidate = c;
+      this.pendingStage = stage;
+      this.offerAmountInput = null;
+      this.rejectionReasonInput = '';
+      this.showOfferModal = true;
+      return;
+    }
+    if (this.REJECTION_STAGES.includes(stage)) {
+      this.pendingStageCandidate = c;
+      this.pendingStage = stage;
+      this.rejectionReasonInput = '';
+      this.offerAmountInput = null;
+      this.showOfferModal = true;
+      return;
+    }
+    this.commitStage(c, stage, null, null);
+  }
+
+  confirmOfferModal(): void {
+    if (!this.pendingStageCandidate || !this.pendingStage) return;
+    this.commitStage(this.pendingStageCandidate, this.pendingStage,
+      this.offerAmountInput, this.rejectionReasonInput || null);
+    this.showOfferModal = false;
+    this.pendingStageCandidate = null;
+    this.pendingStage = null;
+  }
+
+  cancelOfferModal(): void {
+    this.showOfferModal = false;
+    this.pendingStageCandidate = null;
+    this.pendingStage = null;
+  }
+
+  private commitStage(c: Candidate, stage: PipelineStage,
+                      offerAmount: number | null, rejectionReason: string | null): void {
     const original = c.pipelineStage;
     c.pipelineStage = stage;
-    this.openDropdownId = null;
-    this.candidateService.updateStage(c.id, stage).subscribe({
-      next: updated => { Object.assign(c, updated); this.toast(`${c.fullName} moved to ${stage}`); },
-      error: (err)  => {
+    this.candidateService.updateStage(c.id, stage, offerAmount ?? undefined, rejectionReason ?? undefined).subscribe({
+      next: updated => {
+        Object.assign(c, updated);
+        this.toast(`${c.fullName} moved to ${this.stageLabel(stage)}`);
+      },
+      error: (err) => {
         c.pipelineStage = original;
-        const msg = err?.error?.message ?? `Failed to move ${c.fullName}`;
-        this.toast(msg);
+        this.toast(err?.error?.message ?? `Failed to move ${c.fullName}`);
       }
     });
   }
 
   toggleDropdown(id: string, event: Event): void {
     event.stopPropagation();
-    this.openDropdownId = this.openDropdownId === id ? null : id;
+    if (this.openDropdownId === id) {
+      this.openDropdownId = null;
+      return;
+    }
+    const btn = (event.currentTarget as HTMLElement);
+    const rect = btn.getBoundingClientRect();
+    this.dropdownPos = { top: rect.bottom + 4, left: rect.left };
+    this.openDropdownId = id;
   }
 
   closeDropdowns(): void { this.openDropdownId = null; }
+
+  ngOnDestroy(): void {
+    window.removeEventListener('scroll', this.closeOnScroll, true);
+    window.removeEventListener('resize', this.closeOnResize);
+  }
 
   // ── Delete ─────────────────────────────────────────────────────────────
   confirmDelete(c: Candidate): void { this.deleteTarget = c; }
@@ -401,6 +523,18 @@ export class CandidatesComponent implements OnInit {
 
   stageBadgeClass(s: PipelineStage): string { return `stage-${s.toLowerCase()}`; }
   statusBadgeClass(status?: string): string { return `status-${(status || 'new').toLowerCase()}`; }
+
+  toggleExpand(id: string): void {
+    this.expandedCandidateId = this.expandedCandidateId === id ? null : id;
+  }
+
+  isRecommended(c: Candidate): boolean {
+    const r = this.rankingFor(c.id);
+    if (!r || r.llmScore == null) return false;
+    const job = this.jobs.find(j => j.id === c.jobId);
+    const threshold = job?.autoScoreThreshold ?? 60;
+    return r.llmScore >= threshold;
+  }
 
   toast(msg: string): void {
     this.toastMsg = msg;

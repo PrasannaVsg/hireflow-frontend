@@ -17,6 +17,13 @@ export class RankingService {
     );
   }
 
+  rankSingle(jobId: string, candidateId: string): Observable<Ranking> {
+    return this.http.post<Ranking>(
+      `${environment.apiBase}/jobs/${jobId}/rankings/candidate/${candidateId}`,
+      {}
+    );
+  }
+
   list(jobId: string, page = 0, size = 50): Observable<PageResponse<Ranking>> {
     const params = new HttpParams().set('page', page).set('size', size);
     return this.http.get<PageResponse<Ranking>>(

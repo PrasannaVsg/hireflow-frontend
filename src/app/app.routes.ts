@@ -53,6 +53,11 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/analytics/analytics.component').then(m => m.AnalyticsComponent)
   },
   {
+    path: 'reports',
+    canActivate: [authGuard],
+    loadComponent: () => import('./pages/reports/reports.component').then(m => m.ReportsComponent)
+  },
+  {
     path: 'users',
     canActivate: [authGuard],
     loadComponent: () => import('./pages/users/users.component').then(m => m.UsersComponent)
@@ -61,6 +66,11 @@ export const routes: Routes = [
     path: 'audit',
     canActivate: [authGuard],
     loadComponent: () => import('./pages/audit/audit.component').then(m => m.AuditComponent)
+  },
+  {
+    path: 'settings',
+    canActivate: [authGuard],
+    loadComponent: () => import('./pages/settings/settings.component').then(m => m.SettingsComponent)
   },
   { path: '**', redirectTo: 'dashboard' }
 ];

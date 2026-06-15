@@ -2,7 +2,12 @@
 
 export type JobStatus = 'DRAFT' | 'OPEN' | 'ON_HOLD' | 'CLOSED' | 'ARCHIVED';
 export type Seniority = 'JUNIOR' | 'MID' | 'SENIOR' | 'LEAD' | 'MANAGER';
-export type PipelineStage = 'SOURCED' | 'SCREENING' | 'INTERVIEW' | 'OFFER' | 'HIRED' | 'REJECTED';
+export type PipelineStage =
+  | 'SOURCED' | 'SCREENING'
+  | 'L1_SHORTLIST' | 'L1_REJECT'
+  | 'L2_SHORTLIST' | 'L2_REJECT'
+  | 'CLIENT_SHORTLIST' | 'CLIENT_REJECTED'
+  | 'WAITING_FEEDBACK' | 'FINAL_SELECT' | 'OFFER_RELEASED' | 'HIRED';
 export type CandidateSource = 'LINKEDIN' | 'NAUKRI' | 'INDEED' | 'INTERNSHALA' | 'REFERRAL' | 'DIRECT' | 'OTHER';
 export type EmailTone = 'PROFESSIONAL' | 'FRIENDLY' | 'CASUAL' | 'FORMAL';
 export type OutreachStatus = 'DRAFT' | 'APPROVED' | 'SENT' | 'REJECTED';
@@ -12,13 +17,21 @@ export type Role = 'SUPER_ADMIN' | 'ORG_ADMIN' | 'RECRUITER' | 'HIRING_MANAGER' 
 
 export interface Job {
   id: string;
+  jobCode?: string;
   title: string;
+  clientName?: string;
   description: string;
-  location: string;
+  locations: string[];
   seniority: string;
+  expMin?: number;
+  expMax?: number;
   requiredSkills: string;
+  budgetMin?: number;
+  budgetMax?: number;
+  mailTemplate?: string;
   status: JobStatus;
   autoProcessEnabled: boolean;
+  autoEmailOnStageChange: boolean;
   autoShortlistSize: number;
   autoScoreThreshold: number;
   autoEmailTone: string;
@@ -29,11 +42,19 @@ export interface Job {
 
 export interface CreateJobRequest {
   title: string;
+  jobCode?: string;
   description: string;
-  location: string;
+  clientName: string;
+  locations: string[];
   seniority: string;
+  expMin: number | null;
+  expMax: number | null;
   requiredSkills: string;
+  budgetMin: number | null;
+  budgetMax: number | null;
+  mailTemplate: string;
   autoProcessEnabled: boolean;
+  autoEmailOnStageChange: boolean;
   shortlistSize: number;
   scoreThreshold: number;
   emailTone: string;
@@ -51,6 +72,8 @@ export interface Candidate {
   status?: string;
   pipelineStage: PipelineStage;
   jobTitle?: string;
+  offerAmount?: number;
+  rejectionReason?: string;
   aiScore?: number;
   hasEmbedding?: boolean;
   createdAt?: string;
