@@ -10,33 +10,33 @@
 
 <div class="page-wrap">
 
-  <!-- Stage filter bar -->
-  <div class="stage-nav-wrap">
-    <!-- All pill -->
-    <button class="stage-pill all-pill" [class.active]="activeStage === 'ALL'" (click)="setStage('ALL')">
-      All
-      <span class="pill-count" *ngIf="candidates.length > 0">{{ candidates.length }}</span>
+  <!-- Pipeline funnel strip -->
+  <div class="funnel-strip">
+    <button class="funnel-step all-step" [class.active]="activeStage === 'ALL'" (click)="setStage('ALL')">
+      <span class="fs-label">All</span>
+      <span class="fs-count">{{ candidates.length }}</span>
     </button>
 
-    <div class="stage-divider"></div>
+    <ng-container *ngFor="let s of positiveStages">
+      <div class="funnel-arrow"><i class="ti ti-chevron-right"></i></div>
+      <button class="funnel-step" [class.active]="s === activeStage" (click)="setStage(s)">
+        <span class="fs-label">{{ stageLabel(s) }}</span>
+        <span class="fs-count" [class.has-cands]="countForStage(s) > 0">{{ countForStage(s) }}</span>
+      </button>
+    </ng-container>
+  </div>
 
-    <div class="stage-groups">
-      <div class="stage-group" *ngFor="let g of stageGroups">
-        <div class="group-label">{{ g.label }}</div>
-        <div class="group-stages">
-          <button
-            class="stage-pill"
-            *ngFor="let s of g.stages"
-            [class.active]="s === activeStage"
-            [class.reject]="isRejectStage(s)"
-            [class.hired]="s === 'HIRED'"
-            (click)="setStage(s)">
-            {{ stageLabel(s) }}
-            <span class="pill-count" *ngIf="countForStage(s) > 0">{{ countForStage(s) }}</span>
-          </button>
-        </div>
-      </div>
-    </div>
+  <!-- Reject / hold filter chips -->
+  <div class="filter-chips-row">
+    <span class="chips-label">Rejected / Holding:</span>
+    <button
+      *ngFor="let s of rejectStages"
+      class="reject-chip"
+      [class.active]="s === activeStage"
+      (click)="setStage(s)">
+      {{ stageLabel(s) }}
+      <span *ngIf="countForStage(s) > 0" class="rchip-count">{{ countForStage(s) }}</span>
+    </button>
   </div>
 
   <!-- Loading -->
@@ -44,25 +44,23 @@
     <i class="ti ti-loader spin"></i> Loading candidates…
   </div>
 
-  <!-- Empty state -->
+  <!-- Empty -->
   <div class="empty-state" *ngIf="!loading && activeCandidates.length === 0">
-    <i class="ti ti-users" style="font-size:28px;color:var(--border)"></i>
-    <div class="empty-text">
-      {{ activeStage === 'ALL' ? 'No candidates yet' : 'No candidates in ' + stageLabel(activeStage) }}
-    </div>
+    <i class="ti ti-users" style="font-size:26px;color:var(--border)"></i>
+    <div>{{ activeStage === 'ALL' ? 'No candidates yet' : 'No candidates in ' + stageLabel(activeStage) }}</div>
   </div>
 
-  <!-- Candidates table -->
-  <div class="table-wrap" *ngIf="!loading && activeCandidates.length > 0">
+  <!-- Table -->
+  <div class="card table-card" *ngIf="!loading && activeCandidates.length > 0">
     <table class="pipe-table">
       <thead>
         <tr>
           <th>Candidate</th>
           <th>Stage</th>
-          <th>Source</th>
           <th>AI Score</th>
+          <th>Source</th>
           <th>Phone</th>
-          <th style="width:80px">Move</th>
+          <th></th>
         </tr>
       </thead>
       <tbody>
@@ -70,42 +68,34 @@
             [class.row-reject]="isRejectStage(c.pipelineStage)"
             [class.row-hired]="c.pipelineStage === 'HIRED'">
 
-          <!-- Name + email -->
-          <td>
-            <div class="cand-name-cell">
-              <div class="cand-avatar">{{ c.fullName.charAt(0) }}</div>
-              <div>
-                <div class="cand-name">{{ c.fullName }}</div>
-                <div class="cand-email">{{ c.email }}</div>
-              </div>
+          <td class="td-name">
+            <div class="avatar" [style.background]="avatarColor(c.fullName)">{{ c.fullName.charAt(0).toUpperCase() }}</div>
+            <div>
+              <div class="name-text">{{ c.fullName }}</div>
+              <div class="email-text">{{ c.email }}</div>
             </div>
           </td>
 
-          <!-- Stage badge -->
           <td>
             <span class="stage-badge"
-              [class.badge-reject]="isRejectStage(c.pipelineStage)"
-              [class.badge-hired]="c.pipelineStage === 'HIRED'"
-              [class.badge-active]="c.pipelineStage === 'SCREENING' || c.pipelineStage === 'L1_SHORTLIST' || c.pipelineStage === 'L2_SHORTLIST' || c.pipelineStage === 'CLIENT_SHORTLIST' || c.pipelineStage === 'FINAL_SELECT'">
+              [class.sb-progress]="isProgressStage(c.pipelineStage)"
+              [class.sb-reject]="isRejectStage(c.pipelineStage)"
+              [class.sb-hold]="c.pipelineStage === 'WAITING_FEEDBACK'"
+              [class.sb-hired]="c.pipelineStage === 'HIRED'">
               {{ stageLabel(c.pipelineStage) }}
             </span>
           </td>
 
-          <!-- Source -->
-          <td><span class="source-chip">{{ c.source | titlecase }}</span></td>
-
-          <!-- AI Score -->
           <td>
-            <span *ngIf="c.aiScore" class="score-chip" [class]="scoreClass(c.aiScore)">
-              <i class="ti ti-bolt"></i>{{ c.aiScore }}
+            <span *ngIf="c.aiScore" class="score-pill" [class]="scoreClass(c.aiScore)">
+              <i class="ti ti-bolt" style="font-size:10px"></i>{{ c.aiScore }}
             </span>
-            <span *ngIf="!c.aiScore" class="no-score">—</span>
+            <span *ngIf="!c.aiScore" class="muted">—</span>
           </td>
 
-          <!-- Phone -->
-          <td class="phone-cell">{{ c.phone || '—' }}</td>
+          <td><span class="muted">{{ c.source | titlecase }}</span></td>
+          <td><span class="muted">{{ c.phone || '—' }}</span></td>
 
-          <!-- Move -->
           <td (click)="$event.stopPropagation()">
             <div class="move-dd" [class.open]="openMenuId === c.id">
               <button class="btn btn-sm move-btn" (click)="toggleMenu(c.id, $event)">
@@ -113,19 +103,16 @@
               </button>
               <div class="move-menu" *ngIf="openMenuId === c.id">
                 <div class="move-menu-inner">
-                  <div
-                    class="move-opt"
-                    *ngFor="let s of moveTargets(c.pipelineStage)"
-                    (click)="moveStage(c, s); openMenuId = null"
-                    [class.danger]="isRejectStage(s)"
-                    [class.success]="s === 'HIRED'">
+                  <div class="move-opt" *ngFor="let s of moveTargets(c.pipelineStage)"
+                      (click)="moveStage(c, s); openMenuId = null"
+                      [class.opt-reject]="isRejectStage(s)"
+                      [class.opt-hired]="s === 'HIRED'">
                     {{ stageLabel(s) }}
                   </div>
                 </div>
               </div>
             </div>
           </td>
-
         </tr>
       </tbody>
     </table>

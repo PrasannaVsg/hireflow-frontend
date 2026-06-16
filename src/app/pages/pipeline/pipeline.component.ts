@@ -32,6 +32,15 @@ export class PipelineComponent implements OnInit, OnDestroy {
     'WAITING_FEEDBACK', 'FINAL_SELECT', 'OFFER_RELEASED', 'HIRED'
   ];
 
+  readonly positiveStages: PipelineStage[] = [
+    'SOURCED', 'SCREENING', 'L1_SHORTLIST', 'L2_SHORTLIST',
+    'CLIENT_SHORTLIST', 'FINAL_SELECT', 'OFFER_RELEASED', 'HIRED'
+  ];
+
+  readonly rejectStages: PipelineStage[] = [
+    'L1_REJECT', 'L2_REJECT', 'CLIENT_REJECTED', 'WAITING_FEEDBACK'
+  ];
+
   readonly stageGroups: { label: string; stages: PipelineStage[] }[] = [
     { label: 'Sourcing',  stages: ['SOURCED', 'SCREENING'] },
     { label: 'L1',        stages: ['L1_SHORTLIST', 'L1_REJECT'] },
@@ -39,6 +48,16 @@ export class PipelineComponent implements OnInit, OnDestroy {
     { label: 'Client',    stages: ['CLIENT_SHORTLIST', 'CLIENT_REJECTED', 'WAITING_FEEDBACK'] },
     { label: 'Final',     stages: ['FINAL_SELECT', 'OFFER_RELEASED', 'HIRED'] },
   ];
+
+  private readonly avatarColors = ['#5B50D6','#0891b2','#059669','#d97706','#dc2626','#7c3aed','#db2777'];
+  avatarColor(name: string): string {
+    const i = name.charCodeAt(0) % this.avatarColors.length;
+    return this.avatarColors[i];
+  }
+
+  isProgressStage(s: string): boolean {
+    return ['SCREENING','L1_SHORTLIST','L2_SHORTLIST','CLIENT_SHORTLIST','FINAL_SELECT','OFFER_RELEASED'].includes(s);
+  }
 
   readonly stageLabels: Record<PipelineStage, string> = {
     SOURCED: 'Sourced', SCREENING: 'Screening',
